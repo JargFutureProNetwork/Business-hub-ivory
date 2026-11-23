@@ -753,7 +753,12 @@ function Para({ text, cls, color }) {
 /* ============================== MAIN APP ============================== */
 
 function App() {
-  const [uiLang, setUiLang] = useState(() => safeGet("uvp_uiLang") || "en");
+  // Inside the Business Hub the interface language follows the hub's switch (en / ro / ru).
+  const [uiLang, setUiLang] = useState(() => (window.hubTheme && window.hubTheme.embedded && window.hubLang && window.hubLang.get()) || safeGet("uvp_uiLang") || "en");
+  useEffect(() => (window.hubTheme && window.hubTheme.embedded && window.hubLang ? window.hubLang.subscribe((l) => setUiLang(l)) : undefined), []);
+  // The draft is kept in this browser only after the hub's storage consent is accepted.
+  const [consent, setConsent] = useState(() => (window.hubConsent ? window.hubConsent.accepted() : true));
+  useEffect(() => (window.hubConsent ? window.hubConsent.subscribe(setConsent) : undefined), []);
   const [outputLang, setOutputLang] = useState(() => safeGet("uvp_outputLang") || "en");
   const [theme, setTheme] = useState(() => (window.hubTheme && window.hubTheme.get()) || safeGet("uvp_theme") || "light");
   useEffect(() => (window.hubTheme ? window.hubTheme.subscribe((th) => { if (th) setTheme(th); }) : undefined), []);
@@ -785,7 +790,7 @@ function App() {
   useEffect(() => { safeSet("uvp_uiLang", uiLang); }, [uiLang]);
   useEffect(() => { safeSet("uvp_outputLang", outputLang); }, [outputLang]);
   useEffect(() => { safeSet("uvp_theme", theme); }, [theme]);
-  useEffect(() => { safeSet("uvp_form_draft", JSON.stringify(form)); }, [form]);
+  useEffect(() => { if (consent) safeSet("uvp_form_draft", JSON.stringify(form)); }, [form, consent]);
 
   const isValidForm = (f) => REQUIRED.every((k) => f[k].trim().length > 0);
   const isValid = isValidForm(form);

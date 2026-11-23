@@ -116,4 +116,42 @@
       return function () { mo.disconnect(); };
     },
   };
+
+  /* Language: "en" | "ro" | "ru". Inside the hub it follows <html lang> of the
+     hub page; opened on its own it uses the choice saved by the hub. English is
+     the default whenever nothing has been chosen. */
+  var LANGS = ["en", "ro", "ru"];
+  function norm(l) { return LANGS.indexOf(l) >= 0 ? l : "en"; }
+  function hubLang() {
+    if (embedded) {
+      try { return norm(window.parent.document.documentElement.getAttribute("lang")); } catch { /* fall through */ }
+    }
+    try { return norm(localStorage.getItem("ivory-lang")); } catch { return "en"; }
+  }
+  window.hubLang = {
+    get: hubLang,
+    subscribe: function (fn) {
+      if (embedded) {
+        try {
+          var mo = new MutationObserver(function () { fn(hubLang()); });
+          mo.observe(window.parent.document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+          return function () { mo.disconnect(); };
+        } catch { /* fall through */ }
+      }
+      var on = function (e) { if (e.key === "ivory-lang") fn(hubLang()); };
+      window.addEventListener("storage", on);
+      return function () { window.removeEventListener("storage", on); };
+    },
+  };
+
+  /* Storage consent, chosen in the hub's banner. Work is only saved in this
+     browser after "Accept". */
+  window.hubConsent = {
+    accepted: function () { try { return localStorage.getItem("ivory-consent") === "accepted"; } catch { return false; } },
+    subscribe: function (fn) {
+      var on = function (e) { if (e.key === "ivory-consent") fn(window.hubConsent.accepted()); };
+      window.addEventListener("storage", on);
+      return function () { window.removeEventListener("storage", on); };
+    },
+  };
 })();

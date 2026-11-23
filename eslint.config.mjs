@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Third-party libraries copied verbatim for the embedded tools.
     "public/tools/vendor/**",
+    // The Feed Planner's original script, kept in its author's style (hub changes are marked).
+    "public/tools/feed-planner/**",
   ]),
 ]);
 

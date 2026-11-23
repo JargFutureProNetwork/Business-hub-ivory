@@ -1,14 +1,17 @@
 # Ivory Center Business Hub (Next.js)
 
 One site that gathers Ivory Center's business tools: a dashboard (`/`), Canvas Lab (`/canvas`),
-Price Builder (`/price-builder`), UVP & Copy Workbench (`/uvp`) and Resources (`/resources`).
+Price Builder (`/price-builder`), UVP & Copy Workbench (`/uvp`), Feed Planner (`/feed-planner`)
+and Resources (`/resources`). The site is in English, Romanian and Russian (English by default).
 It grew out of the Canvas Lab app below, which is still the bulk of the code.
 
 ## Hub structure
 
 | Path | What it holds |
 |---|---|
-| `src/lib/tools.ts` | `TOOLS`: name, route, copy, icon and kind of every tool. The dashboard cards, header nav and footer all read it, so a new tool is added here once |
+| `src/lib/tools.ts` | `TOOLS`: route, icon, kind and per-language copy (`text.en/ro/ru`) of every tool. The dashboard cards and header nav read it, so a new tool is added here once |
+| `src/lib/i18n.tsx` | `LangProvider` / `useLang()`: the hub's own text in en / ro / ru. The choice is saved as `ivory-lang` and mirrored on `<html lang>` (set before paint by the layout's bootstrap script) |
+| `src/lib/consent.ts`, `src/components/hub/ConsentBanner.tsx` | Storage consent (`ivory-consent`). Work is saved in the browser only after "Accept"; "Decline" deletes saved work (Canvas Lab, UVP draft, Feed Planner projects and its IndexedDB media). "Storage settings" in the footer reopens the banner |
 | `src/lib/resources.ts` | `RESOURCES`: the 24 recommended tools on the Resources page (name, url, domain, maker, category, description, fallback icon/colour). Categories become the filter chips |
 | `src/components/hub/ResourceBrowser.tsx`, `LogoTile.tsx` | Resources search, category chips and cards. A logo is the supplied file in `public/resources/logos/` if set, otherwise the site's favicon loaded by the visitor's browser from Google's favicon service; if that fails or is tiny, a local simple-icons glyph or a monogram on the brand colour |
 | `src/lib/brand-icons.ts` | The few simple-icons (CC0) glyphs the hub uses, generated from simple-icons 16.38.1 |
@@ -21,7 +24,9 @@ It grew out of the Canvas Lab app below, which is still the bulk of the code.
 | `src/app/price-builder`, `src/app/uvp` | Thin pages that render `ToolFrame` |
 | `src/app/api/sample` | Gemini stand-in for claude.ai's `sample` capability, used by the UVP workbench |
 | `public/tools/*.html` | The Price Builder and UVP & Copy Workbench, the original standalone apps |
-| `public/tools/hub-bridge.js` | Provides `window.claude.use("sample" \| "downloads")` to those apps, flags them as embedded, and exposes the hub theme |
+| `public/tools/hub-bridge.js` | Provides `window.claude.use("sample" \| "downloads")` to those apps, flags them as embedded, and exposes `window.hubTheme`, `window.hubLang` and `window.hubConsent` |
+| `public/tools/feed-planner/` | Feed Preview Studio (`studio.js`, `studio.css`) without its Meta connection, and `index.html` to host it |
+| `src/app/api/feed-plan` | Gemini route for the Feed Planner's "Plan with Gemini" (port of its `/api/ai/plan`, no sign-in) |
 | `public/tools/vendor/` | Local copies of the libraries the apps used to load from CDNs (React 18.3.1, ReactDOM, Babel standalone 7.24.7, xlsx-js-style 1.2.0) plus the UVP workbench's precompiled Tailwind v3 CSS |
 
 ### Embedded tools
@@ -41,7 +46,20 @@ the changes made to them are deliberately small and marked with comments:
   after changing its classes rebuild it with
   `npx tailwindcss@3.4.17 --content public/tools/uvp-workbench.html -o public/tools/vendor/uvp-tailwind.css --minify`.
 - `/api/sample` takes a client-built prompt, so it is capped at 16 000 characters. If the site
-  is public, consider rate limiting it at the host.
+  is public, consider rate limiting it at the host. The same goes for `/api/feed-plan` (40 000
+  characters, up to 12 images).
+- **Price Builder**: dark mode is a token swap under `:root[data-theme="dark"]`; `--panel` is the
+  dark surface of the formula / price / example blocks (it used to be `--ink`). Translations: each
+  visible text carries `data-i18n="key"`; English is read from the page, Romanian and Russian sit in
+  `PB_I18N`, which also holds all three languages for script and Excel strings (`T("key")`).
+- **UVP**: inside the hub its interface language follows `hubLang`; its draft is saved only with consent.
+- **Feed Planner**: changes in `studio.js` are marked "Business Hub". Boot is always local:
+  projects in `localStorage` (`fps:projects`), photos and videos in IndexedDB (`feed-planner`
+  database, ids `idb:…`), restored on load by `hydrateMedia()`. Before consent, media is held in
+  memory and written by `flushPending()` once storage is accepted. Publishing, scheduling, the
+  account box and the Meta sign-in are removed; its own text is still English only.
+- **Canvas Lab**'s own text is English only; the hub header, dashboard, Resources, footer and the
+  Price Builder are translated.
 
 `next start` only serves files that were in `public/` when it started; restart it after adding one.
 

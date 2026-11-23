@@ -9,6 +9,7 @@ interactive business tools together under one dashboard.
 | **Canvas Lab** (`/canvas`) | Business Model Canvas with a live feasibility score, AI diagnostic, PNG and Markdown export |
 | **Price Builder** (`/price-builder`) | Price from fulfilment cost, customer acquisition cost and target margin; Excel export |
 | **UVP & Copy Workbench** (`/uvp`) | Value propositions, bios, hero copy, hooks and ads in English, Romanian, Russian and Ukrainian; CSV export |
+| **Feed Planner** (`/feed-planner`) | Plan a month of Instagram or TikTok posts: brand, photos and videos, feed and calendar views, Plan with Gemini |
 | **Resources** (`/resources`) | Curated links, edited in `src/lib/resources.ts` |
 
 ## Getting started
@@ -23,10 +24,13 @@ Open http://localhost:3000.
 
 Get a key from [Google AI Studio](https://aistudio.google.com/apikey). It is read server-side
 only and powers both AI features: the Canvas Lab diagnostic and the UVP workbench's AI
-copywriter. Without it everything else still works. Canvas scores, checks and exports are
+copywriter and the Feed Planner's Plan with Gemini. Without it everything else still works. Canvas scores, checks and exports are
 local, the Price Builder needs no AI, and the UVP workbench switches to its offline templates.
 
-Work is saved in each visitor's own browser; nothing is stored on a server.
+The site is in English (default), Romanian and Russian; the globe icon in the header switches it.
+
+Work is saved in each visitor's own browser, after they accept the storage banner; nothing is
+stored on a server.
 
 ## Adding resources or tools
 

@@ -13,7 +13,6 @@ export const ORG = {
   website: { label: "ivorycenter.md", href: "https://ivorycenter.md/" },
   email: "utahmoldovapartnership@gmail.com",
   phone: { label: "+1 (801) 258-1590", whatsapp: "https://wa.me/18012581590" },
-  founded: "Est. 2015 by Clark Ivory & Walter Plumb III",
 };
 
 export const SOCIAL: (SiteLink & { network: "instagram" | "x" | "facebook" | "linkedin" })[] = [

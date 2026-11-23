@@ -1,8 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { Globe, Mail } from "lucide-react";
 import { BRAND_ICONS } from "@/lib/brand-icons";
 import { ORG, SOCIAL, type SiteLink } from "@/lib/site";
+import { useLang } from "@/lib/i18n";
+import { OPEN_EVENT } from "@/lib/consent";
 
 const stroke = {
   width: 16,
@@ -71,6 +75,7 @@ function Heading({ children }: { children: ReactNode }) {
 }
 
 export function SiteFooter() {
+  const { t } = useLang();
   return (
     <footer className="border-t border-line bg-surface text-[15px]">
       <div className="max-w-[1440px] mx-auto grid sm:grid-cols-2 lg:grid-cols-3">
@@ -91,8 +96,8 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <nav aria-label="Follow" className="px-6 sm:px-8 py-10 border-b lg:border-b-0 lg:border-r border-line">
-          <Heading>Follow</Heading>
+        <nav aria-label={t("f_follow")} className="px-6 sm:px-8 py-10 border-b lg:border-b-0 lg:border-r border-line">
+          <Heading>{t("f_follow")}</Heading>
           <ul className="mt-5 space-y-3">
             {SOCIAL.map((s) => (
               <li key={s.network}>
@@ -103,7 +108,7 @@ export function SiteFooter() {
         </nav>
 
         <div className="px-6 sm:px-8 py-10">
-          <Heading>Contact</Heading>
+          <Heading>{t("f_contact")}</Heading>
           <ul className="mt-5 space-y-3">
             <li>
               <FooterLink
@@ -123,11 +128,18 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-line">
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-8 py-5 flex items-center justify-between gap-4 text-sm text-muted">
+        <div className="max-w-[1440px] mx-auto px-6 sm:px-8 py-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
           <p>
-            © {new Date().getFullYear()} {ORG.short} — {ORG.founded}
+            © {new Date().getFullYear()} {ORG.short} — {t("f_founded")}
           </p>
-          <span className="flex shrink-0" role="img" aria-label="Flag of Moldova">
+          <span className="ml-auto" />
+          <button
+            onClick={() => window.dispatchEvent(new Event(OPEN_EVENT))}
+            className="underline-offset-4 hover:underline hover:text-ink"
+          >
+            {t("f_storage")}
+          </button>
+          <span className="flex shrink-0" role="img" aria-label={t("flag")}>
             <span className="h-4 w-2.5 bg-[#0046AE]" />
             <span className="h-4 w-2.5 bg-[#FFD200]" />
             <span className="h-4 w-2.5 bg-[#CC092F]" />
