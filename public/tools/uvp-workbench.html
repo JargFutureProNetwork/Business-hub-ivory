@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>UVP &amp; Copy Workbench · Ivory Center Business Hub</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2213%22 font-size=%2214%22>✒️</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="/tools/hub-bridge.js"></script>
+<script src="/tools/vendor/react-18.3.1.production.min.js"></script>
+<script src="/tools/vendor/react-dom-18.3.1.production.min.js"></script>
+<script src="/tools/vendor/babel-standalone-7.24.7.min.js"></script>
+<style>
+  /* Ivory Center palette: red #C10926, black, white. The original token names
+     are kept so no component had to change; --wine is now the brand red and
+     --sage stays green for success states. */
+  :root{
+    --bg:#F6F6F7;
+    --bg-panel:#FFFFFF;
+    --bg-panel-2:#EDEDF0;
+    --ink:#000000;
+    --ink-soft:#56565C;
+    --ink-faint:#7C7C85;
+    --wine:#C10926;
+    --wine-strong:#9E0720;
+    --gold:#C10926;
+    --gold-soft:#FCE7EA;
+    --sage:#157A4B;
+    --line:#D9D9DE;
+    --line-strong:#BDBDC4;
+    --focus:#C10926;
+    --shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  [data-theme="dark"]{
+    --bg:#0A0A0B;
+    --bg-panel:#151517;
+    --bg-panel-2:#202024;
+    --ink:#F4F4F5;
+    --ink-soft:#A3A3AC;
+    --ink-faint:#83838C;
+    --wine:#EF4059;
+    --wine-strong:#F26A7E;
+    --gold:#EF4059;
+    --gold-soft:#3A1119;
+    --sage:#3FBF85;
+    --line:#2F2F36;
+    --line-strong:#45454E;
+    --focus:#EF4059;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  /* The theme is set on the app's wrapper div, not <html>, so text has to take
+     its colour from there; otherwise dark mode kept the light ink on headings. */
+  [data-theme]{ color:var(--ink); }
+  /* Inside the Business Hub the theme follows the hub's toggle. */
+  .hub-embedded .uvp-theme-toggle{ display:none; }
+  html,body{ background:var(--bg); }
+  body{
+    font-family:'Manrope', system-ui, sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  html{ scroll-padding-top:env(safe-area-inset-top,0px); }
+  .font-serif-display{ font-family:'Fraunces', Georgia, serif; }
+  *:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; border-radius:4px; }
+  ::selection{ background:var(--gold-soft); }
+  textarea, input, select { background:var(--bg-panel); color:var(--ink); border-color:var(--line); }
+  textarea::placeholder, input::placeholder { color:var(--ink-faint); }
+  ::-webkit-scrollbar{ width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb{ background:var(--line-strong); border-radius:6px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+  }
+  .tab-underline{ position:relative; }
+  .tab-underline.active::after{
+    content:"";
+    position:absolute; left:0.9rem; right:0.9rem; bottom:-1px; height:2px;
+    background:var(--wine);
+    border-radius:2px;
+  }
+  .copy-flash{ animation: flash-bg 0.5s ease-out; }
+  @keyframes flash-bg{ 0%{ background:var(--gold-soft);} 100%{ background:transparent; } }
+  .field-num{
+    font-family:'IBM Plex Serif', serif;
+    font-size:0.72rem;
+    color:var(--ink-faint);
+    letter-spacing:0.02em;
+  }
+</style>
+<!-- Tailwind v3, precompiled from this file's classes (was the Play CDN, which
+     injects its styles at the end of <head>; this link sits in the same place).
+     Rebuild after changing classes:
+     npx tailwindcss@3.4.17 --content public/tools/uvp-workbench.html -o public/tools/vendor/uvp-tailwind.css --minify -->
+<link rel="stylesheet" href="/tools/vendor/uvp-tailwind.css">
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+/* ============================== UI STRINGS ============================== */
+
+const UI = {
+  en: {
+    langName: "English",
+    appTitle: "UVP & Copy Workbench",
+    appSubtitle: "Turn one clear idea about your business into a full set of marketing copy — in the language your customers actually speak.",
+    interfaceLabel: "Interface",
+    outputLabel: "Generate copy in",
+    sectionA: "A — Your business, in plain terms",
+    sectionAHint: "Required. Answer as if explaining your business to a new classmate.",
+    sectionB: "B — Fine-tune the voice",
+    sectionBHint: "Optional. Leave blank and the workbench will choose sensible defaults.",
+    industry: "General industry",
+    industryPh: "e.g. home bakery, IT tutoring, dental clinic",
+    target: "Specific target customer",
+    targetPh: "e.g. busy parents in Chișinău with school-age kids",
+    pain: "Main customer pain / problem",
+    painPh: "e.g. no time to bake, but tired of store-bought bread",
+    product: "Product / solution",
+    productPh: "e.g. subscription box of fresh sourdough, delivered weekly",
+    benefit: "Primary outcome / benefit",
+    benefitPh: "e.g. real bread on the table with zero effort",
+    differentiator: "Unique differentiator",
+    differentiatorPh: "e.g. baked the morning of delivery from a 40-year-old starter",
+    tone: "Brand tone of voice",
+    cta: "Call to action",
+    ctaPh: "e.g. Order your first loaf",
+    competitor: "Main competitor",
+    competitorPh: "e.g. supermarket bread aisle",
+    toneOptions: { professional: "Professional", friendly: "Friendly & warm", bold: "Bold & confident", playful: "Playful & energetic", luxury: "Refined & premium" },
+    generate: "Generate copy",
+    reset: "Clear all fields",
+    downloadCsv: "Download as CSV",
+    requiredNotice: "Fill in Section A to generate copy.",
+    copy: "Copy",
+    copied: "Copied",
+    emptyTitle: "Nothing generated yet",
+    emptyBody: "Fill in Section A on the left, then press \u201cGenerate copy.\u201d Your UVP, bios, hero text, hooks and ads will appear here, all in the output language you chose above.",
+    tabs: { uvp: "UVP variations", ig: "Instagram bio", tiktok: "TikTok bio", hero: "Website hero", hooks: "Video hooks", ads: "Ad copy" },
+    uvpVariant: "Variation",
+    heroH1: "Headline (H1)",
+    heroH2: "Subheadline (H2)",
+    heroCta: "Button",
+    hook: "Hook",
+    adPas: "PAS format (Problem – Agitate – Solution)",
+    adAida: "AIDA format (Attention – Interest – Desire – Action)",
+    theme: "Theme",
+    themeLight: "Light",
+    themeDark: "Dark",
+    footer: "Business Bootcamp · Ivory Center · a practice tool, not legal or professional marketing advice.",
+    draftSaved: "Draft is saved on this device automatically.",
+  },
+  ro: {
+    langName: "Română",
+    appTitle: "Atelier UVP și texte de marketing",
+    appSubtitle: "Transformă o idee clară despre afacerea ta într-un set complet de texte de marketing — în limba pe care o vorbesc clienții tăi.",
+    interfaceLabel: "Interfață",
+    outputLabel: "Generează textul în",
+    sectionA: "A — Afacerea ta, în termeni simpli",
+    sectionAHint: "Obligatoriu. Răspunde ca și cum ai explica afacerea unui coleg nou.",
+    sectionB: "B — Ajustează tonul",
+    sectionBHint: "Opțional. Lasă necompletat și atelierul va folosi valori implicite potrivite.",
+    industry: "Domeniul general",
+    industryPh: "ex. panificație de casă, meditații IT, clinică dentară",
+    target: "Clientul țintă specific",
+    targetPh: "ex. părinți ocupați din Chișinău cu copii de școală",
+    pain: "Principala problemă a clientului",
+    painPh: "ex. nu au timp să coacă, dar s-au săturat de pâinea din magazin",
+    product: "Produs / soluție",
+    productPh: "ex. abonament cu pâine proaspătă, livrată săptămânal",
+    benefit: "Rezultatul / beneficiul principal",
+    benefitPh: "ex. pâine adevărată pe masă, fără niciun efort",
+    differentiator: "Diferențiatorul unic",
+    differentiatorPh: "ex. coaptă în dimineața livrării, din maia veche de 40 de ani",
+    tone: "Tonul vocii brandului",
+    cta: "Apel la acțiune",
+    ctaPh: "ex. Comandă prima pâine",
+    competitor: "Principalul concurent",
+    competitorPh: "ex. raionul de pâine din supermarket",
+    toneOptions: { professional: "Profesional", friendly: "Prietenos și cald", bold: "Îndrăzneț și sigur", playful: "Jucăuș și energic", luxury: "Rafinat și premium" },
+    generate: "Generează textul",
+    reset: "Șterge toate câmpurile",
+    downloadCsv: "Descarcă CSV",
+    requiredNotice: "Completează Secțiunea A pentru a genera textul.",
+    copy: "Copiază",
+    copied: "Copiat",
+    emptyTitle: "Nimic generat încă",
+    emptyBody: "Completează Secțiunea A din stânga, apoi apasă „Generează textul”. UVP-ul, bio-urile, textul hero, hook-urile și reclamele vor apărea aici, în limba de generare aleasă mai sus.",
+    tabs: { uvp: "Variante UVP", ig: "Bio Instagram", tiktok: "Bio TikTok", hero: "Hero pagină web", hooks: "Hook-uri video", ads: "Texte publicitare" },
+    uvpVariant: "Varianta",
+    heroH1: "Titlu principal (H1)",
+    heroH2: "Subtitlu (H2)",
+    heroCta: "Buton",
+    hook: "Hook",
+    adPas: "Format PAS (Problemă – Agravare – Soluție)",
+    adAida: "Format AIDA (Atenție – Interes – Dorință – Acțiune)",
+    theme: "Temă",
+    themeLight: "Luminoasă",
+    themeDark: "Întunecată",
+    footer: "Business Bootcamp · Ivory Center · unealtă de exercițiu, nu consultanță juridică sau profesională de marketing.",
+    draftSaved: "Ciorna se salvează automat pe acest dispozitiv.",
+  },
+  ru: {
+    langName: "Русский",
+    appTitle: "Мастерская UVP и маркетинговых текстов",
+    appSubtitle: "Превратите одну чёткую идею о своём бизнесе в полный набор маркетинговых текстов — на языке, которым говорят ваши клиенты.",
+    interfaceLabel: "Интерфейс",
+    outputLabel: "Генерировать текст на",
+    sectionA: "А — Ваш бизнес простыми словами",
+    sectionAHint: "Обязательно. Отвечайте так, как если бы объясняли бизнес новому однокурснику.",
+    sectionB: "Б — Настройте тон",
+    sectionBHint: "Необязательно. Оставьте пустым — мастерская подберёт разумные значения по умолчанию.",
+    industry: "Общая сфера деятельности",
+    industryPh: "напр. домашняя пекарня, репетиторство по IT, стоматология",
+    target: "Конкретный целевой клиент",
+    targetPh: "напр. занятые родители в Кишинёве со школьниками",
+    pain: "Главная проблема клиента",
+    painPh: "напр. нет времени печь, но надоел магазинный хлеб",
+    product: "Продукт / решение",
+    productPh: "напр. подписка на свежий хлеб с еженедельной доставкой",
+    benefit: "Главный результат / выгода",
+    benefitPh: "напр. настоящий хлеб на столе без каких-либо усилий",
+    differentiator: "Уникальное отличие",
+    differentiatorPh: "напр. испечён утром доставки на 40-летней закваске",
+    tone: "Тон голоса бренда",
+    cta: "Призыв к действию",
+    ctaPh: "напр. Заказать первую буханку",
+    competitor: "Главный конкурент",
+    competitorPh: "напр. полка с хлебом в супермаркете",
+    toneOptions: { professional: "Профессиональный", friendly: "Дружелюбный и тёплый", bold: "Смелый и уверенный", playful: "Игривый и энергичный", luxury: "Изысканный и премиальный" },
+    generate: "Сгенерировать текст",
+    reset: "Очистить все поля",
+    downloadCsv: "Скачать CSV",
+    requiredNotice: "Заполните раздел А, чтобы сгенерировать текст.",
+    copy: "Скопировать",
+    copied: "Скопировано",
+    emptyTitle: "Пока ничего не сгенерировано",
+    emptyBody: "Заполните раздел А слева и нажмите «Сгенерировать текст». UVP, био, текст для сайта, хуки и реклама появятся здесь на выбранном выше языке генерации.",
+    tabs: { uvp: "Варианты UVP", ig: "Био Instagram", tiktok: "Био TikTok", hero: "Главный экран сайта", hooks: "Видео-хуки", ads: "Рекламные тексты" },
+    uvpVariant: "Вариант",
+    heroH1: "Заголовок (H1)",
+    heroH2: "Подзаголовок (H2)",
+    heroCta: "Кнопка",
+    hook: "Хук",
+    adPas: "Формат PAS (Проблема – Обострение – Решение)",
+    adAida: "Формат AIDA (Внимание – Интерес – Желание – Действие)",
+    theme: "Тема",
+    themeLight: "Светлая",
+    themeDark: "Тёмная",
+    footer: "Business Bootcamp · Ivory Center · учебный инструмент, а не юридическая или профессиональная маркетинговая консультация.",
+    draftSaved: "Черновик автоматически сохраняется на этом устройстве.",
+  },
+  uk: {
+    langName: "Українська",
+    appTitle: "Майстерня UVP і маркетингових текстів",
+    appSubtitle: "Перетворіть одну чітку ідею про свій бізнес на повний набір маркетингових текстів — мовою, якою говорять ваші клієнти.",
+    interfaceLabel: "Інтерфейс",
+    outputLabel: "Генерувати текст",
+    sectionA: "А — Ваш бізнес простими словами",
+    sectionAHint: "Обов'язково. Відповідайте так, ніби пояснюєте бізнес новому однокурснику.",
+    sectionB: "Б — Налаштуйте тон",
+    sectionBHint: "Необов'язково. Залиште порожнім — майстерня підбере доречні значення за замовчуванням.",
+    industry: "Загальна сфера діяльності",
+    industryPh: "напр. домашня пекарня, репетиторство з IT, стоматологія",
+    target: "Конкретний цільовий клієнт",
+    targetPh: "напр. зайняті батьки в Кишиневі зі школярами",
+    pain: "Головна проблема клієнта",
+    painPh: "напр. немає часу пекти, але набрид магазинний хліб",
+    product: "Продукт / рішення",
+    productPh: "напр. підписка на свіжий хліб із щотижневою доставкою",
+    benefit: "Головний результат / вигода",
+    benefitPh: "напр. справжній хліб на столі без жодних зусиль",
+    differentiator: "Унікальна відмінність",
+    differentiatorPh: "напр. випечений вранці доставки на 40-річній заквасці",
+    tone: "Тон голосу бренду",
+    cta: "Заклик до дії",
+    ctaPh: "напр. Замовити першу хлібину",
+    competitor: "Головний конкурент",
+    competitorPh: "напр. полиця з хлібом у супермаркеті",
+    toneOptions: { professional: "Професійний", friendly: "Дружній і теплий", bold: "Сміливий і впевнений", playful: "Грайливий і енергійний", luxury: "Вишуканий і преміальний" },
+    generate: "Згенерувати текст",
+    reset: "Очистити всі поля",
+    downloadCsv: "Завантажити CSV",
+    requiredNotice: "Заповніть розділ А, щоб згенерувати текст.",
+    copy: "Копіювати",
+    copied: "Скопійовано",
+    emptyTitle: "Ще нічого не згенеровано",
+    emptyBody: "Заповніть розділ А зліва, потім натисніть «Згенерувати текст». UVP, біографії, текст для сайту, хуки та реклама з'являться тут обраною мовою генерації.",
+    tabs: { uvp: "Варіанти UVP", ig: "Біо Instagram", tiktok: "Біо TikTok", hero: "Головний екран сайту", hooks: "Відео-хуки", ads: "Рекламні тексти" },
+    uvpVariant: "Варіант",
+    heroH1: "Заголовок (H1)",
+    heroH2: "Підзаголовок (H2)",
+    heroCta: "Кнопка",
+    hook: "Хук",
+    adPas: "Формат PAS (Проблема – Загострення – Рішення)",
+    adAida: "Формат AIDA (Увага – Інтерес – Бажання – Дія)",
+    theme: "Тема",
+    themeLight: "Світла",
+    themeDark: "Темна",
+    footer: "Business Bootcamp · Ivory Center · навчальний інструмент, а не юридична чи професійна маркетингова консультація.",
+    draftSaved: "Чернетка автоматично зберігається на цьому пристрої.",
+  },
+};
+
+/* Extra interface strings added in v2 */
+const UI_EXTRA = {
+  en: {
+    moreIdeas: "Generate other ideas",
+    writing: "Writing fresh copy from your brief…",
+    writingSection: "Writing new options…",
+    stop: "Stop",
+    modeAi: "AI copywriter on: your notes are rewritten into original copy, never pasted word for word.",
+    modeLocal: "Offline mode: AI writing isn't available here, so copy is built from templates and reuses your wording.",
+    modeChecking: "Connecting to the AI copywriter…",
+    autoNote: "Copy updates on its own when you change the tone, the output language, or finish editing a field.",
+    errGeneric: "The copy couldn't be written this time. Press \u201cGenerate copy\u201d to try again.",
+    errRate: "Too many requests at once. Wait a few seconds, then try again.",
+    errDeclined: "AI writing was not allowed, so the workbench switched to offline templates.",
+    csvSaved: "CSV saved.",
+    csvDeclined: "Download cancelled.",
+    csvUnavailable: "Downloads aren't available in this view.",
+  },
+  ro: {
+    moreIdeas: "Generează alte idei",
+    writing: "Se scrie un text nou pe baza notițelor tale…",
+    writingSection: "Se scriu opțiuni noi…",
+    stop: "Oprește",
+    modeAi: "Copywriter AI activ: notițele tale sunt rescrise într-un text original, nu copiate cuvânt cu cuvânt.",
+    modeLocal: "Mod offline: scrierea AI nu e disponibilă aici, așa că textul e construit din șabloane și reia formulările tale.",
+    modeChecking: "Conectare la copywriterul AI…",
+    autoNote: "Textul se actualizează singur când schimbi tonul, limba de generare sau termini de editat un câmp.",
+    errGeneric: "Textul nu a putut fi scris de data aceasta. Apasă „Generează textul” ca să încerci din nou.",
+    errRate: "Prea multe cereri deodată. Așteaptă câteva secunde, apoi încearcă din nou.",
+    errDeclined: "Scrierea AI nu a fost permisă, așa că atelierul a trecut la șabloane offline.",
+    csvSaved: "CSV salvat.",
+    csvDeclined: "Descărcare anulată.",
+    csvUnavailable: "Descărcările nu sunt disponibile aici.",
+  },
+  ru: {
+    moreIdeas: "Другие идеи",
+    writing: "Пишем свежий текст по вашему брифу…",
+    writingSection: "Пишем новые варианты…",
+    stop: "Стоп",
+    modeAi: "AI-копирайтер включён: ваши заметки переписываются в оригинальный текст, а не вставляются дословно.",
+    modeLocal: "Офлайн-режим: AI здесь недоступен, поэтому текст собирается из шаблонов и повторяет ваши формулировки.",
+    modeChecking: "Подключаемся к AI-копирайтеру…",
+    autoNote: "Текст обновляется сам, когда вы меняете тон, язык генерации или заканчиваете редактировать поле.",
+    errGeneric: "Не удалось написать текст. Нажмите «Сгенерировать текст», чтобы попробовать снова.",
+    errRate: "Слишком много запросов сразу. Подождите несколько секунд и попробуйте снова.",
+    errDeclined: "AI-генерация не разрешена, поэтому мастерская переключилась на офлайн-шаблоны.",
+    csvSaved: "CSV сохранён.",
+    csvDeclined: "Загрузка отменена.",
+    csvUnavailable: "Загрузки здесь недоступны.",
+  },
+  uk: {
+    moreIdeas: "Інші ідеї",
+    writing: "Пишемо свіжий текст за вашим брифом…",
+    writingSection: "Пишемо нові варіанти…",
+    stop: "Стоп",
+    modeAi: "AI-копірайтер увімкнено: ваші нотатки переписуються в оригінальний текст, а не вставляються дослівно.",
+    modeLocal: "Офлайн-режим: AI тут недоступний, тому текст збирається з шаблонів і повторює ваші формулювання.",
+    modeChecking: "Підключаємося до AI-копірайтера…",
+    autoNote: "Текст оновлюється сам, коли ви змінюєте тон, мову генерації або закінчуєте редагувати поле.",
+    errGeneric: "Не вдалося написати текст. Натисніть «Згенерувати текст», щоб спробувати знову.",
+    errRate: "Забагато запитів одночасно. Зачекайте кілька секунд і спробуйте знову.",
+    errDeclined: "AI-генерацію не дозволено, тому майстерня перейшла на офлайн-шаблони.",
+    csvSaved: "CSV збережено.",
+    csvDeclined: "Завантаження скасовано.",
+    csvUnavailable: "Завантаження тут недоступні.",
+  },
+};
+Object.keys(UI_EXTRA).forEach((k) => Object.assign(UI[k], UI_EXTRA[k]));
+
+const LANGS = ["en", "ro", "ru", "uk"];
+const SECTIONS = ["uvp", "ig", "tiktok", "hero", "hooks", "ads"];
+const REQUIRED = ["industry", "target", "pain", "product", "benefit", "differentiator"];
+
+/* ============================== AI COPYWRITER (sample capability) ============================== */
+
+const LANG_FULL = {
+  en: "English",
+  ro: "Romanian, as written in the Republic of Moldova",
+  ru: "Russian, as spoken in Moldova",
+  uk: "Ukrainian",
+};
+
+const TONE_GUIDE = {
+  professional: "professional and credible: calm authority, precise verbs, no exclamation marks, no slang, at most one emoji where emojis are allowed",
+  friendly: "friendly and warm: talks like a helpful neighbour, uses 'you' a lot, short sentences, gentle humour, a few soft emojis where allowed",
+  bold: "bold and confident: short punchy sentences, strong claims backed by the brief, direct challenges to the old way, energetic emojis where allowed",
+  playful: "playful and energetic: wordplay, rhythm, surprise, internet-native phrasing, lively emojis where allowed",
+  luxury: "refined and premium: understated, sensory, unhurried, elegant word choice, very few or no emojis, never pushy",
+};
+
+const SECTION_SPEC = {
+  uvp: `"uvp": an array of exactly 3 objects {"label": short name of the formula in the output language, "text": 1–2 sentences}. Use three genuinely different structures: (1) a positioning statement (who it's for, the pain, what it is, how it beats the alternative); (2) an outcome-first promise backed by a proof point drawn from the differentiator; (3) a contrast line that names the old way and the new way.`,
+  ig: `"ig": a string, at most 150 characters, 3–4 short lines separated by \\n, emojis according to the tone, the last line is the call to action pointing to the link (👇 or 🔗).`,
+  tiktok: `"tiktok": a string, at most 80 characters, one punchy line that makes someone follow.`,
+  hero: `"hero": an object {"h1": at most 8 words, the outcome in the customer's own language; "h2": one sentence of at most 22 words saying what it is and why to believe it; "cta": a 2–4 word button label that starts with a verb}.`,
+  hooks: `"hooks": an array of exactly 5 strings, each the first spoken line of a Reel/TikTok (at most 14 words), each in a different style: bold claim, relatable pain moment, curiosity gap, contrarian myth-bust, POV or before/after.`,
+  ads: `"ads": an object {"pas": a PAS ad in 3 short paragraphs separated by \\n\\n (problem, agitation, solution with CTA), at most 70 words; "aida": an AIDA ad in 4 short parts separated by \\n\\n, at most 80 words}. Do not print the framework words (Problem, Attention, etc.) as labels.`,
+};
+
+function briefText(form) {
+  const lines = [
+    `Industry: ${form.industry}`,
+    `Target customer: ${form.target}`,
+    `Customer's pain: ${form.pain}`,
+    `Product / solution: ${form.product}`,
+    `Main outcome: ${form.benefit}`,
+    `Differentiator: ${form.differentiator}`,
+  ];
+  if (form.cta.trim()) lines.push(`Desired call to action: ${form.cta}`);
+  if (form.competitor.trim()) lines.push(`Main competitor: ${form.competitor}`);
+  return lines.join("\n");
+}
+
+function buildPrompt(form, lang, sections, avoid) {
+  const specs = sections.map((s) => "- " + SECTION_SPEC[s]).join("\n");
+  const avoidBlock = avoid
+    ? `\n7. The student already saw these versions and didn't like them. Take a clearly different angle: new images, new structure, new wording. Don't reuse their ideas or phrases:\n${avoid}\n`
+    : "";
+  return `You are a senior direct-response copywriter who works with small businesses in Moldova. A student entrepreneur wrote this rough brief. It is their raw notes, often generic or clumsy:
+
+<brief>
+${briefText(form)}
+</brief>
+
+Write the copy in ${LANG_FULL[lang]}. Write natively, the way a local copywriter would, never like a translation. Tone of voice: ${TONE_GUIDE[form.tone] || TONE_GUIDE.friendly}.
+
+Rules:
+1. Don't paste the brief. Treat it as raw notes: find the real insight (the exact moment the customer feels the pain, the concrete result they want, the reason to believe this business) and say it in fresher, sharper words. Never reuse more than 3 consecutive words from any brief field, except proper names and the product's name.
+2. Be concrete: prefer a specific scene, object, moment or detail that follows from the brief over abstractions. Never invent prices, statistics, awards, reviews or guarantees the brief doesn't support.
+3. Banned words and their equivalents in the output language: "high quality", "innovative", "solution", "best", "unique", "unlock", "elevate", "seamless", "game-changer", "next level", "revolutionary", "one-stop", "we are passionate".
+4. ${form.competitor.trim() ? "Contrast with the named competitor by what it lacks, not by insulting it; you may describe it instead of naming it." : "Contrast with the usual old way customers solve this today."}
+5. Call to action: ${form.cta.trim() ? "keep the intent of the desired CTA but make it sharper and more specific." : "choose the most natural next step for this business (message, order, book, visit)."}
+6. Every piece must sound like it belongs to the same brand, but no two pieces should reuse the same sentence.${avoidBlock}
+
+Reply with only one JSON object with these keys:
+${specs}`;
+}
+
+function asStr(v) { return typeof v === "string" ? v.trim() : ""; }
+
+// Validates and normalizes whatever sections came back from the model.
+function normalizeSections(raw, sections) {
+  const out = {};
+  if (!raw || typeof raw !== "object") return out;
+  if (sections.includes("uvp") && Array.isArray(raw.uvp)) {
+    const u = raw.uvp.map((x) => (typeof x === "string" ? { label: "", text: x.trim() } : { label: asStr(x && x.label), text: asStr(x && x.text) }))
+      .filter((x) => x.text);
+    if (u.length) out.uvp = u.slice(0, 3);
+  }
+  if (sections.includes("ig") && asStr(raw.ig)) out.ig = asStr(raw.ig);
+  if (sections.includes("tiktok") && asStr(raw.tiktok)) out.tiktok = asStr(raw.tiktok);
+  if (sections.includes("hero") && raw.hero && asStr(raw.hero.h1)) {
+    out.hero = { h1: asStr(raw.hero.h1), h2: asStr(raw.hero.h2), cta: asStr(raw.hero.cta) };
+  }
+  if (sections.includes("hooks") && Array.isArray(raw.hooks)) {
+    const h = raw.hooks.map(asStr).filter(Boolean);
+    if (h.length) out.hooks = h.slice(0, 5);
+  }
+  if (sections.includes("ads") && raw.ads && (asStr(raw.ads.pas) || asStr(raw.ads.aida))) {
+    out.ads = { pas: asStr(raw.ads.pas), aida: asStr(raw.ads.aida) };
+  }
+  return out;
+}
+
+function sectionAsText(gen, key) {
+  if (!gen) return "";
+  switch (key) {
+    case "uvp": return (gen.uvp || []).map((u) => "- " + u.text).join("\n");
+    case "ig": return gen.ig || "";
+    case "tiktok": return gen.tiktok || "";
+    case "hero": return gen.hero ? `H1: ${gen.hero.h1}\nH2: ${gen.hero.h2}\nCTA: ${gen.hero.cta}` : "";
+    case "hooks": return (gen.hooks || []).map((h) => "- " + h).join("\n");
+    case "ads": return gen.ads ? `PAS: ${gen.ads.pas}\nAIDA: ${gen.ads.aida}` : "";
+    default: return "";
+  }
+}
+
+/* ============================== OFFLINE TEMPLATE ENGINE (fallback) ============================== */
+
+const FALLBACK = {
+  competitor: { en: "the usual way", ro: "varianta obișnuită", ru: "привычный способ", uk: "звичний спосіб" },
+  cta: { en: "Send us a message", ro: "Scrie-ne un mesaj", ru: "Напишите нам", uk: "Напишіть нам" },
+};
+const TONE_EMOJI = {
+  professional: ["▸"], friendly: ["🙂", "✨", "🤝"], bold: ["🔥", "⚡", "💪"], playful: ["🎉", "😄", "✨"], luxury: ["✦", "✧"],
+};
+const lc1 = (s) => (s ? s.charAt(0).toLowerCase() + s.slice(1) : s);
+const uc1 = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+const stripEnd = (s) => s.replace(/[.!?\s]+$/, "");
+
+function rotate(pool, seed, n) {
+  const out = [];
+  for (let i = 0; i < n && i < pool.length; i++) out.push(pool[(seed * n + i) % pool.length]);
+  return out;
+}
+
+function templatePools(form, lang) {
+  const d = {};
+  Object.keys(form).forEach((k) => (d[k] = stripEnd(String(form[k] || "").trim())));
+  d.competitor = d.competitor || FALLBACK.competitor[lang];
+  d.cta = d.cta || FALLBACK.cta[lang];
+  const em = TONE_EMOJI[form.tone] || ["✨"];
+  const e = (i) => em[i % em.length] + " ";
+  const end = form.tone === "bold" || form.tone === "playful" ? "!" : ".";
+  const P = {
+    en: {
+      uvp: [
+        { label: "Positioning statement", text: `For ${d.target} tired of ${lc1(d.pain)}, ${d.product} gets you ${lc1(d.benefit)}${end} Unlike ${d.competitor}, ${lc1(d.differentiator)}.` },
+        { label: "Outcome first", text: `${uc1(d.benefit)} — that's what ${d.target} get from ${d.product}, because ${lc1(d.differentiator)}.` },
+        { label: "Old way vs new way", text: `${uc1(d.competitor)} leaves you with ${lc1(d.pain)}. ${uc1(d.product)} leaves you with ${lc1(d.benefit)}${end}` },
+        { label: "Question hook", text: `What if ${lc1(d.pain)} simply stopped being your problem? ${uc1(d.product)}: ${lc1(d.differentiator)}.` },
+        { label: "Reason to believe", text: `${uc1(d.differentiator)}. That's why ${d.target} trust ${d.product} for ${lc1(d.benefit)}.` },
+      ],
+      ig: [
+        `${e(0)}${uc1(d.benefit)}\n${uc1(d.differentiator)}\nFor ${d.target}\n👇 ${d.cta}`,
+        `${uc1(d.industry)}, done differently ${e(1)}\nNo more ${lc1(d.pain)}\n👇 ${d.cta}`,
+      ],
+      tiktok: [`${uc1(d.benefit)} ${e(2)}| ${d.cta}`, `Goodbye, ${lc1(d.pain)} ${e(0)}`],
+      hero: [
+        { h1: `${uc1(d.benefit)}${end}`, h2: `${uc1(d.product)} for ${d.target}. ${uc1(d.differentiator)}.`, cta: d.cta },
+        { h1: `Forget ${lc1(d.pain)}${end}`, h2: `${uc1(d.product)} gives ${d.target} ${lc1(d.benefit)} — ${lc1(d.differentiator)}.`, cta: d.cta },
+      ],
+      hooks: [
+        `Stop accepting ${lc1(d.pain)} as normal.`,
+        `If you're one of the ${d.target}, you know this feeling: ${lc1(d.pain)}.`,
+        `Here's what ${d.competitor} won't tell you.`,
+        `Everyone thinks ${lc1(d.pain)} is unavoidable. It isn't.`,
+        `POV: ${lc1(d.benefit)}, and it took zero extra effort.`,
+        `The one detail that changes everything: ${lc1(d.differentiator)}.`,
+        `Before ${d.product} vs after. Watch till the end.`,
+        `3 signs you've outgrown ${d.competitor}.`,
+      ],
+      ads: [
+        { pas: `${uc1(d.pain)}?\n\nEvery week it costs you time, money and patience — and ${d.competitor} hasn't fixed it.\n\n${uc1(d.product)}: ${lc1(d.benefit)}, because ${lc1(d.differentiator)}. ${d.cta}${end}`,
+          aida: `${d.target}, this one's for you.\n\n${uc1(d.product)} was built around one thing: ${lc1(d.differentiator)}.\n\nPicture it: ${lc1(d.benefit)}.\n\n${d.cta}${end}` },
+        { pas: `Still stuck with ${lc1(d.pain)}?\n\nThe longer it lasts, the more normal it feels — and that's the trap.\n\n${uc1(d.product)} changes that: ${lc1(d.benefit)}. ${d.cta}${end}`,
+          aida: `Not another ${d.industry} promise.\n\n${uc1(d.differentiator)}.\n\nThe result? ${uc1(d.benefit)}.\n\n${d.cta}${end}` },
+      ],
+    },
+    ro: {
+      uvp: [
+        { label: "Declarație de poziționare", text: `Pentru ${d.target} care s-au săturat de ${lc1(d.pain)}, ${d.product} îți aduce ${lc1(d.benefit)}${end} Spre deosebire de ${d.competitor}, ${lc1(d.differentiator)}.` },
+        { label: "Rezultatul întâi", text: `${uc1(d.benefit)} — asta primesc ${d.target} de la ${d.product}, pentru că ${lc1(d.differentiator)}.` },
+        { label: "Vechi vs nou", text: `${uc1(d.competitor)} te lasă cu ${lc1(d.pain)}. ${uc1(d.product)} te lasă cu ${lc1(d.benefit)}${end}` },
+        { label: "Întrebare", text: `Și dacă ${lc1(d.pain)} n-ar mai fi problema ta? ${uc1(d.product)}: ${lc1(d.differentiator)}.` },
+        { label: "Motiv să crezi", text: `${uc1(d.differentiator)}. De aceea ${d.target} aleg ${d.product}.` },
+      ],
+      ig: [
+        `${e(0)}${uc1(d.benefit)}\n${uc1(d.differentiator)}\nPentru ${d.target}\n👇 ${d.cta}`,
+        `${uc1(d.industry)}, altfel ${e(1)}\nFără ${lc1(d.pain)}\n👇 ${d.cta}`,
+      ],
+      tiktok: [`${uc1(d.benefit)} ${e(2)}| ${d.cta}`, `Adio, ${lc1(d.pain)} ${e(0)}`],
+      hero: [
+        { h1: `${uc1(d.benefit)}${end}`, h2: `${uc1(d.product)} pentru ${d.target}. ${uc1(d.differentiator)}.`, cta: d.cta },
+        { h1: `Uită de ${lc1(d.pain)}${end}`, h2: `${uc1(d.product)} le aduce ${d.target} ${lc1(d.benefit)} — ${lc1(d.differentiator)}.`, cta: d.cta },
+      ],
+      hooks: [
+        `Nu mai accepta ${lc1(d.pain)} ca pe ceva normal.`,
+        `Dacă ești printre ${d.target}, știi senzația asta.`,
+        `Ce nu-ți spune nimeni despre ${d.competitor}.`,
+        `Toți cred că ${lc1(d.pain)} e inevitabil. Nu e.`,
+        `POV: ${lc1(d.benefit)}, fără niciun efort în plus.`,
+        `Detaliul care schimbă tot: ${lc1(d.differentiator)}.`,
+        `Înainte de ${d.product} vs după. Uită-te până la final.`,
+        `3 semne că ai depășit ${d.competitor}.`,
+      ],
+      ads: [
+        { pas: `${uc1(d.pain)}?\n\nÎn fiecare săptămână te costă timp, bani și răbdare — iar ${d.competitor} nu a rezolvat asta.\n\n${uc1(d.product)}: ${lc1(d.benefit)}, pentru că ${lc1(d.differentiator)}. ${d.cta}${end}`,
+          aida: `${uc1(d.target)}, asta e pentru voi.\n\n${uc1(d.product)} e construit în jurul unui lucru: ${lc1(d.differentiator)}.\n\nImaginează-ți: ${lc1(d.benefit)}.\n\n${d.cta}${end}` },
+        { pas: `Tot te lupți cu ${lc1(d.pain)}?\n\nCu cât durează mai mult, cu atât pare mai normal — și asta e capcana.\n\n${uc1(d.product)} schimbă asta: ${lc1(d.benefit)}. ${d.cta}${end}`,
+          aida: `Nu încă o promisiune din ${d.industry}.\n\n${uc1(d.differentiator)}.\n\nRezultatul? ${uc1(d.benefit)}.\n\n${d.cta}${end}` },
+      ],
+    },
+    ru: {
+      uvp: [
+        { label: "Позиционирование", text: `Для тех, кто устал от проблемы «${lc1(d.pain)}» (${d.target}): ${d.product} даёт результат — ${lc1(d.benefit)}${end} В отличие от варианта «${d.competitor}», ${lc1(d.differentiator)}.` },
+        { label: "Сначала результат", text: `${uc1(d.benefit)} — вот что получают ${d.target} с ${d.product}, потому что ${lc1(d.differentiator)}.` },
+        { label: "Старый путь vs новый", text: `«${uc1(d.competitor)}» оставляет вас с проблемой. ${uc1(d.product)} — с результатом: ${lc1(d.benefit)}${end}` },
+        { label: "Вопрос", text: `А что, если «${lc1(d.pain)}» больше не ваша проблема? ${uc1(d.product)}: ${lc1(d.differentiator)}.` },
+        { label: "Причина верить", text: `${uc1(d.differentiator)}. Поэтому ${d.target} выбирают ${d.product}.` },
+      ],
+      ig: [
+        `${e(0)}${uc1(d.benefit)}\n${uc1(d.differentiator)}\nДля: ${d.target}\n👇 ${d.cta}`,
+        `${uc1(d.industry)} — по-другому ${e(1)}\nБез «${lc1(d.pain)}»\n👇 ${d.cta}`,
+      ],
+      tiktok: [`${uc1(d.benefit)} ${e(2)}| ${d.cta}`, `Прощай, «${lc1(d.pain)}» ${e(0)}`],
+      hero: [
+        { h1: `${uc1(d.benefit)}${end}`, h2: `${uc1(d.product)} для вас (${d.target}). ${uc1(d.differentiator)}.`, cta: d.cta },
+        { h1: `Забудьте про «${lc1(d.pain)}»${end}`, h2: `${uc1(d.product)}: ${lc1(d.benefit)} — ${lc1(d.differentiator)}.`, cta: d.cta },
+      ],
+      hooks: [
+        `Хватит считать «${lc1(d.pain)}» нормой.`,
+        `${uc1(d.target)}, вам знакомо это чувство.`,
+        `Чего вам не расскажут про «${d.competitor}».`,
+        `Все думают, что «${lc1(d.pain)}» — неизбежно. Нет.`,
+        `POV: ${lc1(d.benefit)}, и без лишних усилий.`,
+        `Деталь, которая меняет всё: ${lc1(d.differentiator)}.`,
+        `До и после ${d.product}. Досмотрите до конца.`,
+        `3 признака, что «${d.competitor}» вам уже не подходит.`,
+      ],
+      ads: [
+        { pas: `${uc1(d.pain)}?\n\nКаждую неделю это стоит вам времени, денег и нервов — и «${d.competitor}» это не исправил.\n\n${uc1(d.product)}: ${lc1(d.benefit)}, потому что ${lc1(d.differentiator)}. ${d.cta}${end}`,
+          aida: `${uc1(d.target)}, это для вас.\n\n${uc1(d.product)} построен вокруг одного: ${lc1(d.differentiator)}.\n\nПредставьте: ${lc1(d.benefit)}.\n\n${d.cta}${end}` },
+        { pas: `Всё ещё «${lc1(d.pain)}»?\n\nЧем дольше это длится, тем нормальнее кажется — в этом и ловушка.\n\n${uc1(d.product)} меняет это: ${lc1(d.benefit)}. ${d.cta}${end}`,
+          aida: `Не очередное обещание из сферы «${d.industry}».\n\n${uc1(d.differentiator)}.\n\nРезультат? ${uc1(d.benefit)}.\n\n${d.cta}${end}` },
+      ],
+    },
+    uk: {
+      uvp: [
+        { label: "Позиціонування", text: `Для тих, кого втомила проблема «${lc1(d.pain)}» (${d.target}): ${d.product} дає результат — ${lc1(d.benefit)}${end} На відміну від варіанту «${d.competitor}», ${lc1(d.differentiator)}.` },
+        { label: "Спершу результат", text: `${uc1(d.benefit)} — ось що отримують ${d.target} з ${d.product}, бо ${lc1(d.differentiator)}.` },
+        { label: "Старий шлях vs новий", text: `«${uc1(d.competitor)}» залишає вас із проблемою. ${uc1(d.product)} — з результатом: ${lc1(d.benefit)}${end}` },
+        { label: "Питання", text: `А що, як «${lc1(d.pain)}» більше не ваша проблема? ${uc1(d.product)}: ${lc1(d.differentiator)}.` },
+        { label: "Причина вірити", text: `${uc1(d.differentiator)}. Тому ${d.target} обирають ${d.product}.` },
+      ],
+      ig: [
+        `${e(0)}${uc1(d.benefit)}\n${uc1(d.differentiator)}\nДля: ${d.target}\n👇 ${d.cta}`,
+        `${uc1(d.industry)} — по-іншому ${e(1)}\nБез «${lc1(d.pain)}»\n👇 ${d.cta}`,
+      ],
+      tiktok: [`${uc1(d.benefit)} ${e(2)}| ${d.cta}`, `Прощавай, «${lc1(d.pain)}» ${e(0)}`],
+      hero: [
+        { h1: `${uc1(d.benefit)}${end}`, h2: `${uc1(d.product)} для вас (${d.target}). ${uc1(d.differentiator)}.`, cta: d.cta },
+        { h1: `Забудьте про «${lc1(d.pain)}»${end}`, h2: `${uc1(d.product)}: ${lc1(d.benefit)} — ${lc1(d.differentiator)}.`, cta: d.cta },
+      ],
+      hooks: [
+        `Годі вважати «${lc1(d.pain)}» нормою.`,
+        `${uc1(d.target)}, вам знайоме це відчуття.`,
+        `Чого вам не розкажуть про «${d.competitor}».`,
+        `Усі думають, що «${lc1(d.pain)}» — неминуче. Ні.`,
+        `POV: ${lc1(d.benefit)}, і без зайвих зусиль.`,
+        `Деталь, що змінює все: ${lc1(d.differentiator)}.`,
+        `До і після ${d.product}. Додивіться до кінця.`,
+        `3 ознаки, що «${d.competitor}» вам уже не підходить.`,
+      ],
+      ads: [
+        { pas: `${uc1(d.pain)}?\n\nЩотижня це коштує вам часу, грошей і нервів — і «${d.competitor}» цього не виправив.\n\n${uc1(d.product)}: ${lc1(d.benefit)}, бо ${lc1(d.differentiator)}. ${d.cta}${end}`,
+          aida: `${uc1(d.target)}, це для вас.\n\n${uc1(d.product)} збудовано навколо одного: ${lc1(d.differentiator)}.\n\nУявіть: ${lc1(d.benefit)}.\n\n${d.cta}${end}` },
+        { pas: `Досі «${lc1(d.pain)}»?\n\nЩо довше це триває, то нормальніше здається — у цьому й пастка.\n\n${uc1(d.product)} змінює це: ${lc1(d.benefit)}. ${d.cta}${end}`,
+          aida: `Не чергова обіцянка зі сфери «${d.industry}».\n\n${uc1(d.differentiator)}.\n\nРезультат? ${uc1(d.benefit)}.\n\n${d.cta}${end}` },
+      ],
+    },
+  };
+  return P[lang];
+}
+
+function localGenerate(form, lang, seeds) {
+  const p = templatePools(form, lang);
+  const s = (k) => seeds[k] || 0;
+  return {
+    uvp: rotate(p.uvp, s("uvp"), 3),
+    ig: p.ig[s("ig") % p.ig.length],
+    tiktok: p.tiktok[s("tiktok") % p.tiktok.length],
+    hero: p.hero[s("hero") % p.hero.length],
+    hooks: rotate(p.hooks, s("hooks"), 5),
+    ads: p.ads[s("ads") % p.ads.length],
+  };
+}
+
+/* ============================== HELPERS ============================== */
+
+function safeGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+function safeSet(key, val) { try { localStorage.setItem(key, val); } catch (e) { /* ignore */ } }
+
+function useCapability(name) {
+  const [state, setState] = useState({ status: "checking", api: null });
+  useEffect(() => {
+    let alive = true;
+    if (!window.claude || typeof window.claude.use !== "function") {
+      setState({ status: "off", api: null });
+      return;
+    }
+    window.claude.use(name)
+      .then((api) => { if (alive) setState({ status: api ? "on" : "off", api }); })
+      .catch(() => { if (alive) setState({ status: "off", api: null }); });
+    return () => { alive = false; };
+  }, [name]);
+  return [state, setState];
+}
+
+const EMPTY_FORM = {
+  industry: "", target: "", pain: "", product: "", benefit: "", differentiator: "",
+  tone: "friendly", cta: "", competitor: "",
+};
+
+/* ============================== SMALL COMPONENTS ============================== */
+
+function Field({ label, index, children }) {
+  return (
+    <div className="mb-4">
+      <label className="flex items-baseline gap-2 mb-1.5">
+        {index && <span className="field-num">{index}</span>}
+        <span className="text-sm font-medium" style={{ color: "var(--ink)" }}>{label}</span>
+      </label>
+      {children}
+    </div>
+  );
+}
+
+const inputCls = "w-full rounded-md border px-3 py-2 text-sm transition-colors focus:border-[var(--wine)]";
+
+function CopyButton({ text, label, copiedLabel }) {
+  const [copied, setCopied] = useState(false);
+  const tRef = useRef(null);
+  const doCopy = async () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+      }
+      setCopied(true);
+      clearTimeout(tRef.current);
+      tRef.current = setTimeout(() => setCopied(false), 1600);
+    } catch (e) { /* ignore */ }
+  };
+  useEffect(() => () => clearTimeout(tRef.current), []);
+  return (
+    <button onClick={doCopy} className="text-xs font-medium px-2.5 py-1 rounded-md border transition-colors shrink-0"
+      style={{ borderColor: copied ? "var(--sage)" : "var(--line)", color: copied ? "var(--sage)" : "var(--ink-soft)" }}>
+      {copied ? copiedLabel : label}
+    </button>
+  );
+}
+
+function OutputBlock({ title, text, t, children }) {
+  return (
+    <div className="rounded-lg border p-4" style={{ borderColor: "var(--line)", background: "var(--bg-panel)", boxShadow: "var(--shadow)" }}>
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <h3 className="text-sm font-semibold" style={{ color: "var(--wine)" }}>{title}</h3>
+        <CopyButton text={text} label={t.copy} copiedLabel={t.copied} />
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Para({ text, cls, color }) {
+  return <p className={`${cls || "text-sm leading-relaxed"} whitespace-pre-line`} style={{ color: color || "var(--ink)" }}>{text}</p>;
+}
+
+/* ============================== MAIN APP ============================== */
+
+function App() {
+  const [uiLang, setUiLang] = useState(() => safeGet("uvp_uiLang") || "en");
+  const [outputLang, setOutputLang] = useState(() => safeGet("uvp_outputLang") || "en");
+  const [theme, setTheme] = useState(() => (window.hubTheme && window.hubTheme.get()) || safeGet("uvp_theme") || "light");
+  useEffect(() => (window.hubTheme ? window.hubTheme.subscribe((th) => { if (th) setTheme(th); }) : undefined), []);
+  const [form, setForm] = useState(() => {
+    const saved = safeGet("uvp_form_draft");
+    if (saved) { try { return { ...EMPTY_FORM, ...JSON.parse(saved) }; } catch (e) { /* ignore */ } }
+    return EMPTY_FORM;
+  });
+  const [generated, setGenerated] = useState(null);
+  const [genLang, setGenLang] = useState(null);
+  const [activeTab, setActiveTab] = useState("uvp");
+  const [attempted, setAttempted] = useState(false);
+  const [busy, setBusy] = useState(null); // null | "all" | section key
+  const [notice, setNotice] = useState("");
+  const [seeds, setSeeds] = useState({});
+  const [useLocal, setUseLocal] = useState(false);
+
+  const [sampleCap] = useCapability("sample");
+  const [dlCap] = useCapability("downloads");
+  const ctlRef = useRef(null);
+  const snapshotRef = useRef("");
+  const genRef = useRef(null);
+  genRef.current = generated;
+
+  const t = UI[uiLang];
+  const aiMode = sampleCap.status === "on" && !useLocal;
+  const mode = useLocal || sampleCap.status === "off" ? "local" : sampleCap.status === "checking" ? "checking" : "ai";
+
+  useEffect(() => { safeSet("uvp_uiLang", uiLang); }, [uiLang]);
+  useEffect(() => { safeSet("uvp_outputLang", outputLang); }, [outputLang]);
+  useEffect(() => { safeSet("uvp_theme", theme); }, [theme]);
+  useEffect(() => { safeSet("uvp_form_draft", JSON.stringify(form)); }, [form]);
+
+  const isValidForm = (f) => REQUIRED.every((k) => f[k].trim().length > 0);
+  const isValid = isValidForm(form);
+  const snap = (f, l) => JSON.stringify([f, l]);
+
+  // Offline mode: copy follows every edit instantly once something has been generated.
+  useEffect(() => {
+    if (mode !== "local" || !genRef.current || !isValid) return;
+    setGenerated(localGenerate(form, outputLang, seeds));
+    setGenLang(outputLang);
+  }, [form, outputLang, seeds, mode]);
+
+  const handleSampleError = (err) => {
+    const code = err && err.code;
+    if (code === "cancelled") return;
+    if (code === "not_granted" || code === "capability_disabled" || code === "capability_removed" || code === "unavailable") {
+      setUseLocal(true);
+      setNotice("errDeclined");
+      return;
+    }
+    setNotice(code === "rate_limited" ? "errRate" : "errGeneric");
+  };
+
+  const runAi = async (f, lang, sections, avoid) => {
+    if (ctlRef.current) ctlRef.current.abort();
+    const ctl = new AbortController();
+    ctlRef.current = ctl;
+    setBusy(sections.length > 1 ? "all" : sections[0]);
+    setNotice("");
+    try {
+      const raw = await sampleCap.api.json(buildPrompt(f, lang, sections, avoid), {
+        signal: ctl.signal, modelTier: "default", cache: !avoid,
+      });
+      if (ctlRef.current !== ctl) return;
+      const parsed = normalizeSections(raw, sections);
+      if (!Object.keys(parsed).length) { setNotice("errGeneric"); return; }
+      if (sections.length > 1) {
+        setGenerated(parsed);
+        setGenLang(lang);
+        snapshotRef.current = snap(f, lang);
+      } else {
+        setGenerated((g) => ({ ...(g || {}), ...parsed }));
+      }
+    } catch (err) {
+      if (ctlRef.current === ctl) handleSampleError(err);
+    } finally {
+      if (ctlRef.current === ctl) { setBusy(null); ctlRef.current = null; }
+    }
+  };
+
+  const generateAll = (f = form, lang = outputLang) => {
+    if (!isValidForm(f)) return;
+    if (aiMode) {
+      runAi(f, lang, SECTIONS, null);
+    } else {
+      setGenerated(localGenerate(f, lang, seeds));
+      setGenLang(lang);
+      snapshotRef.current = snap(f, lang);
+    }
+  };
+
+  const handleGenerate = () => {
+    setAttempted(true);
+    if (!isValid) return;
+    setActiveTab((tab) => tab || "uvp");
+    generateAll();
+  };
+
+  // Called after a discrete change (tone, CTA field blur, language switch).
+  const autoUpdate = (f, lang) => {
+    if (!genRef.current || !isValidForm(f)) return;
+    if (mode !== "ai") return; // offline mode already follows edits live
+    if (snapshotRef.current === snap(f, lang)) return;
+    runAi(f, lang, SECTIONS, null);
+  };
+
+  const moreIdeas = (key) => {
+    if (!generated) return;
+    if (aiMode) {
+      runAi(form, genLang || outputLang, [key], sectionAsText(generated, key));
+    } else {
+      setSeeds((s) => ({ ...s, [key]: (s[key] || 0) + 1 }));
+    }
+  };
+
+  const stop = () => { if (ctlRef.current) { ctlRef.current.abort(); ctlRef.current = null; } setBusy(null); };
+
+  const handleReset = () => {
+    stop();
+    setForm(EMPTY_FORM);
+    setGenerated(null);
+    setAttempted(false);
+    setSeeds({});
+    setNotice("");
+    snapshotRef.current = "";
+  };
+
+  const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  const onBlurField = () => autoUpdate(form, outputLang);
+  const onToneChange = (e) => {
+    const f = { ...form, tone: e.target.value };
+    setForm(f);
+    autoUpdate(f, outputLang);
+  };
+  const onOutputLang = (code) => {
+    setOutputLang(code);
+    autoUpdate(form, code);
+  };
+
+  const handleDownloadCsv = async () => {
+    const esc = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
+    const rows = [["section", "field", "value"]];
+    REQUIRED.concat(["tone", "cta", "competitor"]).forEach((k) => rows.push(["input", k, form[k]]));
+    rows.push(["input", "output_language", genLang || outputLang]);
+    if (generated) {
+      (generated.uvp || []).forEach((u, i) => rows.push(["uvp", `variation_${i + 1}${u.label ? " (" + u.label + ")" : ""}`, u.text]));
+      rows.push(["instagram_bio", "text", generated.ig]);
+      rows.push(["tiktok_bio", "text", generated.tiktok]);
+      if (generated.hero) { rows.push(["hero", "h1", generated.hero.h1]); rows.push(["hero", "h2", generated.hero.h2]); rows.push(["hero", "cta", generated.hero.cta]); }
+      (generated.hooks || []).forEach((h, i) => rows.push(["hook", `hook_${i + 1}`, h]));
+      if (generated.ads) { rows.push(["ad", "pas", generated.ads.pas]); rows.push(["ad", "aida", generated.ads.aida]); }
+    }
+    const csv = "\uFEFF" + rows.map((r) => r.map(esc).join(",")).join("\r\n");
+    const filename = "uvp-marketing-copy.csv";
+    if (dlCap.api) {
+      try {
+        await dlCap.api.save({ filename, data: new Blob([csv], { type: "text/csv" }) });
+        setNotice("csvSaved");
+      } catch (err) {
+        setNotice(err && err.code === "declined" ? "csvDeclined" : "csvUnavailable");
+      }
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const langPill = (current, onPick) => (
+    <div className="inline-flex flex-wrap rounded-full border p-0.5" style={{ borderColor: "var(--line)" }}>
+      {LANGS.map((code) => (
+        <button key={code} onClick={() => onPick(code)} aria-pressed={current === code}
+          className="text-xs font-medium px-2.5 py-1 rounded-full transition-colors"
+          style={{ background: current === code ? "var(--wine)" : "transparent", color: current === code ? "var(--bg-panel)" : "var(--ink-soft)" }}>
+          {UI[code].langName}
+        </button>
+      ))}
+    </div>
+  );
+
+  const outT = UI[genLang || outputLang];
+  const g = generated || {};
+  const sectionBusy = busy && busy !== "all";
+
+  const MoreButton = ({ k }) => (
+    <button onClick={() => moreIdeas(k)} disabled={!!busy}
+      className="w-full rounded-md border border-dashed px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
+      style={{ borderColor: "var(--line-strong)", color: "var(--wine)" }}>
+      {busy === k ? t.writingSection : `\u21BB  ${t.moreIdeas}`}
+    </button>
+  );
+
+  const modeText = mode === "ai" ? t.modeAi : mode === "checking" ? t.modeChecking : t.modeLocal;
+
+  return (
+    <div data-theme={theme} style={{ background: "var(--bg)" }} className="min-h-screen">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+        <header className="flex flex-col gap-4 pb-5 mb-6 border-b" style={{ borderColor: "var(--line)" }}>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="max-w-2xl">
+              <h1 className="font-serif-display text-2xl sm:text-[1.7rem] font-semibold leading-tight">{t.appTitle}</h1>
+              <p className="text-sm mt-1.5" style={{ color: "var(--ink-soft)" }}>{t.appSubtitle}</p>
+            </div>
+            <button onClick={() => setTheme((th) => (th === "light" ? "dark" : "light"))}
+              className="uvp-theme-toggle text-xs font-medium px-3 py-1.5 rounded-full border shrink-0"
+              style={{ borderColor: "var(--line)", color: "var(--ink-soft)" }} aria-label={t.theme}>
+              {theme === "light" ? `\u263C  ${t.themeLight}` : `\u263E  ${t.themeDark}`}
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+            <div>
+              <div className="text-xs font-medium mb-1.5" style={{ color: "var(--ink-faint)" }}>{t.interfaceLabel}</div>
+              {langPill(uiLang, setUiLang)}
+            </div>
+            <div>
+              <div className="text-xs font-medium mb-1.5" style={{ color: "var(--ink-faint)" }}>{t.outputLabel}</div>
+              {langPill(outputLang, onOutputLang)}
+            </div>
+          </div>
+          <p className="text-xs flex items-center gap-2" style={{ color: mode === "ai" ? "var(--sage)" : "var(--ink-faint)" }}>
+            <span className="inline-block w-2 h-2 rounded-full" style={{ background: mode === "ai" ? "var(--sage)" : "var(--line-strong)" }} />
+            {modeText}
+          </p>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,380px)_1fr] gap-6 items-start">
+
+          {/* FORM */}
+          <div className="rounded-xl border p-5 lg:sticky lg:top-6" style={{ borderColor: "var(--line)", background: "var(--bg-panel)", boxShadow: "var(--shadow)" }}>
+            <h2 className="font-serif-display text-lg font-semibold" style={{ color: "var(--wine)" }}>{t.sectionA}</h2>
+            <p className="text-xs mt-0.5 mb-4" style={{ color: "var(--ink-faint)" }}>{t.sectionAHint}</p>
+
+            {[
+              ["industry", "input"], ["target", "input"], ["pain", "area"],
+              ["product", "area"], ["benefit", "area"], ["differentiator", "area"],
+            ].map(([k, kind], i) => (
+              <Field key={k} label={t[k]} index={String(i + 1)}>
+                {kind === "input"
+                  ? <input value={form[k]} onChange={update(k)} onBlur={onBlurField} placeholder={t[k + "Ph"]} className={inputCls} style={{ borderColor: "var(--line)" }} />
+                  : <textarea rows={2} value={form[k]} onChange={update(k)} onBlur={onBlurField} placeholder={t[k + "Ph"]} className={inputCls + " resize-none"} style={{ borderColor: "var(--line)" }} />}
+              </Field>
+            ))}
+
+            {attempted && !isValid && (
+              <p className="text-xs mb-3 -mt-1" style={{ color: "var(--wine)" }}>{t.requiredNotice}</p>
+            )}
+
+            <div className="my-5 border-t" style={{ borderColor: "var(--line)" }} />
+
+            <h2 className="font-serif-display text-lg font-semibold" style={{ color: "var(--wine)" }}>{t.sectionB}</h2>
+            <p className="text-xs mt-0.5 mb-4" style={{ color: "var(--ink-faint)" }}>{t.sectionBHint}</p>
+
+            <Field label={t.tone}>
+              <select value={form.tone} onChange={onToneChange} className={inputCls} style={{ borderColor: "var(--line)" }}>
+                {Object.entries(t.toneOptions).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </Field>
+            <Field label={t.cta}>
+              <input value={form.cta} onChange={update("cta")} onBlur={onBlurField} placeholder={t.ctaPh} className={inputCls} style={{ borderColor: "var(--line)" }} />
+            </Field>
+            <Field label={t.competitor}>
+              <input value={form.competitor} onChange={update("competitor")} onBlur={onBlurField} placeholder={t.competitorPh} className={inputCls} style={{ borderColor: "var(--line)" }} />
+            </Field>
+
+            <div className="flex flex-wrap gap-2 mt-2">
+              <button onClick={handleGenerate} disabled={busy === "all"}
+                className="flex-1 rounded-md px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
+                style={{ background: "var(--wine)", color: "var(--bg-panel)" }}>
+                {busy === "all" ? t.writingSection : t.generate}
+              </button>
+              <button onClick={handleReset} className="rounded-md px-3 py-2.5 text-sm font-medium border" style={{ borderColor: "var(--line)", color: "var(--ink-soft)" }}>
+                {t.reset}
+              </button>
+            </div>
+            <p className="text-[0.7rem] mt-3 leading-relaxed" style={{ color: "var(--ink-faint)" }}>{t.autoNote} {t.draftSaved}</p>
+          </div>
+
+          {/* OUTPUT */}
+          <div>
+            {notice && (
+              <div role="status" className="mb-4 rounded-md border px-3 py-2 text-sm"
+                style={{ borderColor: notice.startsWith("csvSaved") ? "var(--sage)" : "var(--gold)", color: "var(--ink)", background: "var(--bg-panel)" }}>
+                {t[notice]}
+              </div>
+            )}
+
+            {!generated && busy !== "all" && (
+              <div className="rounded-xl border p-10 text-center flex flex-col items-center justify-center min-h-[360px]" style={{ borderColor: "var(--line)", background: "var(--bg-panel-2)" }}>
+                <div className="text-3xl mb-3" aria-hidden="true">{"\u270D\uFE0F"}</div>
+                <h3 className="font-serif-display text-lg font-semibold mb-1.5">{t.emptyTitle}</h3>
+                <p className="text-sm max-w-md" style={{ color: "var(--ink-soft)" }}>{t.emptyBody}</p>
+              </div>
+            )}
+
+            {busy === "all" && (
+              <div className="rounded-xl border p-8 mb-4 flex flex-col items-center gap-4 text-center" style={{ borderColor: "var(--line)", background: "var(--bg-panel-2)" }}>
+                <div className="w-full max-w-md flex flex-col gap-2" aria-hidden="true">
+                  {[92, 78, 85, 60].map((w, i) => (
+                    <div key={i} className="h-2.5 rounded-full animate-pulse" style={{ width: w + "%", background: "var(--line)" }} />
+                  ))}
+                </div>
+                <p className="text-sm" style={{ color: "var(--ink-soft)" }}>{t.writing}</p>
+                <button onClick={stop} className="text-xs font-medium px-3 py-1.5 rounded-md border" style={{ borderColor: "var(--line)", color: "var(--ink-soft)" }}>{t.stop}</button>
+              </div>
+            )}
+
+            {generated && (
+              <div style={{ opacity: busy === "all" ? 0.45 : 1 }}>
+                <div className="flex flex-wrap items-end gap-1 mb-5 border-b" style={{ borderColor: "var(--line)" }}>
+                  {SECTIONS.map((k) => (
+                    <button key={k} onClick={() => setActiveTab(k)}
+                      className={`tab-underline px-3.5 py-2 text-sm font-medium ${activeTab === k ? "active" : ""}`}
+                      style={{ color: activeTab === k ? "var(--wine)" : "var(--ink-soft)" }}>
+                      {t.tabs[k]}
+                    </button>
+                  ))}
+                  <div className="ml-auto pb-1.5">
+                    <button onClick={handleDownloadCsv} className="text-xs font-medium px-3 py-1.5 rounded-md border" style={{ borderColor: "var(--line)", color: "var(--sage)" }}>
+                      {t.downloadCsv}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3" style={{ opacity: busy === activeTab ? 0.5 : 1 }}>
+                  {activeTab === "uvp" && (g.uvp || []).map((u, i) => (
+                    <OutputBlock key={i} t={t} text={u.text} title={`${outT.uvpVariant} ${i + 1}${u.label ? " · " + u.label : ""}`}>
+                      <Para text={u.text} />
+                    </OutputBlock>
+                  ))}
+
+                  {activeTab === "ig" && g.ig && (
+                    <OutputBlock t={t} title={outT.tabs.ig} text={g.ig}>
+                      <Para text={g.ig} />
+                      <p className="text-xs mt-2" style={{ color: g.ig.length > 150 ? "var(--wine)" : "var(--ink-faint)" }}>{g.ig.length} / 150</p>
+                    </OutputBlock>
+                  )}
+
+                  {activeTab === "tiktok" && g.tiktok && (
+                    <OutputBlock t={t} title={outT.tabs.tiktok} text={g.tiktok}>
+                      <Para text={g.tiktok} />
+                      <p className="text-xs mt-2" style={{ color: g.tiktok.length > 80 ? "var(--wine)" : "var(--ink-faint)" }}>{g.tiktok.length} / 80</p>
+                    </OutputBlock>
+                  )}
+
+                  {activeTab === "hero" && g.hero && (
+                    <>
+                      <div className="rounded-lg border p-6" style={{ borderColor: "var(--line)", background: "var(--bg-panel-2)" }}>
+                        <p className="font-serif-display text-2xl font-semibold leading-snug mb-2">{g.hero.h1}</p>
+                        <p className="text-sm leading-relaxed mb-4 max-w-xl" style={{ color: "var(--ink-soft)" }}>{g.hero.h2}</p>
+                        <span className="inline-block text-sm font-semibold px-4 py-2 rounded-md" style={{ background: "var(--wine)", color: "var(--bg-panel)" }}>{g.hero.cta}</span>
+                      </div>
+                      <OutputBlock t={t} title={outT.heroH1} text={g.hero.h1}><Para text={g.hero.h1} /></OutputBlock>
+                      <OutputBlock t={t} title={outT.heroH2} text={g.hero.h2}><Para text={g.hero.h2} /></OutputBlock>
+                      <OutputBlock t={t} title={outT.heroCta} text={g.hero.cta}><Para text={g.hero.cta} /></OutputBlock>
+                    </>
+                  )}
+
+                  {activeTab === "hooks" && (g.hooks || []).map((h, i) => (
+                    <OutputBlock key={i} t={t} title={`${outT.hook} ${i + 1}`} text={h}><Para text={h} /></OutputBlock>
+                  ))}
+
+                  {activeTab === "ads" && g.ads && (
+                    <>
+                      <OutputBlock t={t} title={outT.adPas} text={g.ads.pas}><Para text={g.ads.pas} /></OutputBlock>
+                      <OutputBlock t={t} title={outT.adAida} text={g.ads.aida}><Para text={g.ads.aida} /></OutputBlock>
+                    </>
+                  )}
+
+                  <MoreButton k={activeTab} />
+                  {sectionBusy && busy === activeTab && (
+                    <button onClick={stop} className="self-center text-xs font-medium px-3 py-1 rounded-md border" style={{ borderColor: "var(--line)", color: "var(--ink-soft)" }}>{t.stop}</button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <footer className="mt-10 pt-5 border-t text-center" style={{ borderColor: "var(--line)" }}>
+          <p className="text-xs" style={{ color: "var(--ink-faint)" }}>{t.footer}</p>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+
+</script>
+</body>
+</html>

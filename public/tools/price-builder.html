@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Price Builder · Ivory Center Business Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/tools/hub-bridge.js"></script>
+<style>
+  /* Inside the Business Hub the hub header carries the brand, so the tool's
+     own masthead and accent rule are hidden. Opened on its own, they show. */
+  .hub-embedded .accent-bar,.hub-embedded header.masthead{display:none}
+  :root{
+    /* UMBP brand palette (pulled from the Week 4 deck) */
+    --red:#C10926;          /* primary brand red  */
+    --red-bright:#E8354F;   /* bright accent red  */
+    --ink:#111114;          /* near-black         */
+    --ink-2:#0E0E10;        /* darker black       */
+    --gray:#5E5E66;         /* secondary text     */
+    --gray-mid:#8A8A93;     /* muted text         */
+    --gray-soft:#9A9AA2;
+    --line:#E3E3E8;         /* borders            */
+    --surface:#F2F2F5;      /* light panel        */
+    --card:#FFFFFF;
+    --page:#ECECF0;
+
+    /* component colours (stacked bar) */
+    --c-fulfill:#6B6B73;
+    --c-cac:#E8354F;
+    --c-profit:#111114;
+
+    --radius:14px;
+    --radius-sm:9px;
+    --shadow:0 1px 2px rgba(17,17,20,.05), 0 8px 24px rgba(17,17,20,.06);
+    --font:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  /* Tool is locked to its light brand surface; the guard keeps a dark-mode
+     viewer from repainting it, while body still carries an explicit bg. */
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --page:#ECECF0; }
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+  body{
+    margin:0;font-family:var(--font);background:var(--page);color:var(--ink);
+    line-height:1.5;-webkit-font-smoothing:antialiased;
+  }
+  .accent-bar{height:4px;background:var(--red);width:100%}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 56px}
+
+  /* ---------- Header ---------- */
+  header.masthead{background:var(--ink);color:#fff;padding:22px 0 26px}
+  .masthead-inner{max-width:1180px;margin:0 auto;padding:0 20px;
+    display:flex;flex-wrap:wrap;align-items:center;gap:16px;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand .mark{font-weight:800;letter-spacing:.5px;font-size:18px;white-space:nowrap}
+  .brand .mark span{color:var(--red-bright)}
+  .brand .div{width:1px;height:26px;background:#3a3a40}
+  .brand .sub{font-size:10px;line-height:1.25;color:var(--gray-soft);
+    text-transform:uppercase;letter-spacing:1.2px;font-weight:600}
+  .pill{display:inline-block;background:var(--red);color:#fff;font-weight:700;
+    font-size:11px;letter-spacing:1.4px;text-transform:uppercase;
+    padding:8px 14px;border-radius:999px;white-space:nowrap}
+
+  /* ---------- Hero / formula ---------- */
+  .hero{margin:26px 0 22px}
+  .hero h1{font-size:clamp(22px,3.4vw,32px);font-weight:800;margin:0 0 6px;letter-spacing:-.4px}
+  .hero p.lede{margin:0 0 20px;color:var(--gray);font-size:15px;max-width:720px}
+  .formula{background:var(--ink);border-radius:var(--radius);padding:20px 22px;color:#fff;
+    display:flex;flex-wrap:wrap;align-items:stretch;gap:12px;box-shadow:var(--shadow)}
+  .f-term{flex:1 1 150px;min-width:140px;background:rgba(255,255,255,.05);
+    border-radius:var(--radius-sm);padding:12px 14px;border-left:4px solid var(--m)}
+  .f-term .k{font-size:10px;letter-spacing:1.3px;text-transform:uppercase;color:var(--gray-soft);font-weight:700}
+  .f-term .v{font-size:15px;font-weight:700;margin-top:3px}
+  .f-op{display:flex;align-items:center;justify-content:center;font-size:22px;
+    font-weight:300;color:var(--gray-soft);flex:0 0 auto;padding:0 2px}
+  .f-term.price{border-left-color:var(--red-bright);background:rgba(232,53,79,.12)}
+  .f-term.price .v{color:#fff}
+
+  /* ---------- Controls row ---------- */
+  .controls{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;
+    margin:22px 0 18px;padding:16px 18px;background:var(--card);
+    border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .ctrl-group{display:flex;flex-direction:column;gap:7px}
+  .ctrl-group>span.lbl{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;
+    color:var(--gray-mid);font-weight:700}
+  .seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);
+    border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;cursor:pointer;font-family:inherit;
+    font-size:12.5px;font-weight:600;color:var(--gray);padding:7px 14px;border-radius:999px;
+    transition:all .12s ease}
+  .seg button[aria-pressed="true"]{background:var(--red);color:#fff;box-shadow:0 1px 3px rgba(193,9,38,.4)}
+  .presets{margin-left:auto;display:flex;flex-direction:column;gap:7px}
+  .preset-btns{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{border:1px solid var(--line);background:var(--card);cursor:pointer;font-family:inherit;
+    font-size:12.5px;font-weight:600;color:var(--ink);padding:8px 13px;border-radius:var(--radius-sm);
+    transition:all .12s ease;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{border-color:var(--gray-mid)}
+  .btn.ghost{color:var(--gray)}
+  .btn .dot{width:8px;height:8px;border-radius:50%;background:var(--red)}
+  .export-group{margin-left:auto}
+  .export-row{display:flex;align-items:center;gap:10px}
+  .export-btn{background:var(--red);color:#fff;border-color:var(--red)}
+  .export-btn:hover{background:#a50820;border-color:#a50820}
+  .export-btn:active{transform:translateY(1px)}
+  .export-status{font-size:12px;font-weight:600;color:var(--gray-mid);white-space:nowrap}
+  .export-status.ok{color:#1a7f37}
+  .export-status.err{color:var(--red)}
+
+  /* ---------- Main grid ---------- */
+  .grid{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:22px;align-items:start}
+  @media (max-width:880px){ .grid{grid-template-columns:1fr} }
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden}
+  .card-h{padding:15px 18px 14px;border-bottom:1px solid var(--line);display:flex;
+    align-items:center;gap:10px}
+  .card-h .num{width:24px;height:24px;border-radius:7px;background:var(--surface);
+    color:var(--ink);font-weight:800;font-size:12px;display:flex;align-items:center;
+    justify-content:center;flex:0 0 auto}
+  .card-h.fulfill .num{background:var(--c-fulfill);color:#fff}
+  .card-h.cac .num{background:var(--c-cac);color:#fff}
+  .card-h.profit .num{background:var(--c-profit);color:#fff}
+  .card-h h3{margin:0;font-size:14.5px;font-weight:700}
+  .card-h .hint{margin-left:auto;font-size:11px;color:var(--gray-mid);font-weight:600}
+  .card-b{padding:16px 18px}
+
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  .field>label{display:flex;justify-content:space-between;align-items:baseline;
+    font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:6px;gap:8px}
+  .field>label .tip{font-size:10.5px;color:var(--gray-mid);font-weight:500;text-align:right}
+  .inp{position:relative;display:flex;align-items:center;border:1px solid var(--line);
+    border-radius:var(--radius-sm);background:var(--card);transition:border-color .12s ease}
+  .inp:focus-within{border-color:var(--red);box-shadow:0 0 0 3px rgba(193,9,38,.10)}
+  .inp .pre{padding:0 2px 0 12px;color:var(--gray-mid);font-weight:600;font-size:13px}
+  .inp input{border:0;outline:0;background:transparent;font-family:inherit;font-size:15px;
+    font-weight:600;color:var(--ink);width:100%;padding:10px 12px;min-width:0}
+  .inp .suf{padding:0 12px 0 2px;color:var(--gray-mid);font-weight:600;font-size:12px;white-space:nowrap}
+  .inp input::-webkit-outer-spin-button,.inp input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .inp input[type=number]{-moz-appearance:textfield}
+  .derived{margin-top:9px;background:var(--surface);border-radius:var(--radius-sm);
+    padding:9px 12px;font-size:12px;color:var(--gray);display:flex;justify-content:space-between;gap:10px}
+  .derived b{color:var(--ink);font-weight:700}
+  .subseg{margin-bottom:14px}
+
+  /* ---------- Results ---------- */
+  .result-price{background:var(--ink);color:#fff;border-radius:var(--radius);padding:22px 24px;
+    box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .result-price::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--red)}
+  .result-price .rp-k{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;
+    color:var(--gray-soft);font-weight:700}
+  .result-price .rp-v{font-size:clamp(34px,6vw,52px);font-weight:800;letter-spacing:-1px;
+    color:#fff;line-height:1.05;margin:4px 0 2px}
+  .result-price .rp-v .cur{color:var(--red-bright);font-size:.55em;font-weight:700;vertical-align:baseline;margin-right:4px}
+  .result-price .rp-sub{font-size:13px;color:var(--gray-soft)}
+  .result-price .rp-sub b{color:#fff}
+  .warn{margin-top:12px;background:rgba(232,53,79,.15);border:1px solid rgba(232,53,79,.4);
+    color:#ffd9df;font-size:12px;font-weight:600;padding:9px 12px;border-radius:var(--radius-sm)}
+
+  /* ---- monthly totals box ---- */
+  .totals-box{margin-top:18px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .tb-head{background:var(--red);color:#fff;font-weight:700;font-size:13px;letter-spacing:.3px;
+    padding:11px 18px;display:flex;align-items:center;gap:8px}
+  .tb-head span{font-weight:600;font-size:11.5px;color:rgba(255,255,255,.82);margin-left:auto}
+  .tb-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}
+  .tb-stat{background:var(--card);padding:16px 18px}
+  .tb-stat.profit{background:var(--ink)}
+  .tb-k{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);font-weight:700}
+  .tb-stat.profit .tb-k{color:var(--gray-soft)}
+  .tb-v{font-size:clamp(22px,3.6vw,30px);font-weight:800;letter-spacing:-.5px;margin-top:4px;
+    font-variant-numeric:tabular-nums;color:var(--ink)}
+  .tb-stat.revenue .tb-v{color:var(--ink)}
+  .tb-stat.profit .tb-v{color:var(--red-bright)}
+  .tb-foot{display:flex;flex-wrap:wrap;gap:6px 20px;padding:11px 18px;background:var(--surface);
+    font-size:12px;color:var(--gray)}
+  .tb-foot b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+
+  .bar-wrap{margin:18px 0 0}
+  .bar{display:flex;height:40px;border-radius:9px;overflow:hidden;border:1px solid var(--line)}
+  .bar .seg-f{background:var(--c-fulfill)}
+  .bar .seg-c{background:var(--c-cac)}
+  .bar .seg-p{background:var(--c-profit)}
+  .bar>div{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;
+    font-weight:700;min-width:0;transition:flex-basis .25s ease;overflow:hidden;white-space:nowrap}
+  .legend-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:11px}
+  .lg{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--gray);font-weight:600}
+  .lg .sw{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+
+  table.breakdown{width:100%;border-collapse:collapse;margin-top:4px}
+  table.breakdown td{padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle}
+  table.breakdown tr:last-child td{border-bottom:0}
+  table.breakdown td.lab{color:var(--gray);font-weight:500}
+  table.breakdown td.lab .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:8px;vertical-align:middle}
+  table.breakdown td.val{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  table.breakdown tr.sum td{border-top:1.5px solid var(--ink);border-bottom:0;padding-top:12px}
+  table.breakdown tr.sum td.lab{color:var(--ink);font-weight:700}
+  table.breakdown tr.floor td{background:var(--surface)}
+  table.breakdown tr.floor td.lab{font-weight:600;color:var(--ink);padding-left:10px}
+  table.breakdown tr.floor td.val{padding-right:10px}
+  table.breakdown tr.grand td{padding-top:13px}
+  table.breakdown tr.grand td.lab{color:var(--red);font-weight:800;font-size:14px}
+  table.breakdown tr.grand td.val{color:var(--red);font-weight:800;font-size:17px}
+
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:4px}
+  .metric{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:13px 14px}
+  .metric .mk{font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--gray-mid);font-weight:700}
+  .metric .mv{font-size:20px;font-weight:800;color:var(--ink);margin-top:3px;font-variant-numeric:tabular-nums}
+  .metric .mv small{font-size:12px;color:var(--gray);font-weight:600}
+  .metric.flag .mv{color:var(--red)}
+
+  .be-note{margin-top:14px;font-size:13px;color:var(--gray);background:var(--surface);
+    border-left:4px solid var(--red);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:12px 15px}
+  .be-note b{color:var(--ink)}
+
+  .section-title{display:flex;align-items:center;gap:12px;margin:34px 0 16px}
+  .section-title .pill{flex:0 0 auto}
+  .section-title h2{margin:0;font-size:19px;font-weight:800;letter-spacing:-.3px}
+
+  /* ---------- Legend / glossary ---------- */
+  .glossary{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:720px){ .glossary{grid-template-columns:1fr} }
+  .term{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px 17px;box-shadow:var(--shadow)}
+  .term h4{margin:0 0 5px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+  .term h4 .sw{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+  .term p{margin:0 0 9px;font-size:13px;color:var(--gray);line-height:1.55}
+  .term p:last-child{margin-bottom:0}
+  .term .ex{font-size:12.5px;color:var(--ink);background:var(--surface);border-radius:var(--radius-sm);
+    padding:9px 11px;line-height:1.5}
+  .term .ex .tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.8px;
+    text-transform:uppercase;color:var(--red-bright);margin-right:6px}
+  .term .ex b{color:var(--ink);font-weight:700}
+
+  .example-strip{background:var(--ink);color:#fff;border-radius:var(--radius);padding:18px 20px;margin-top:4px}
+  .example-strip .tag{display:inline-block;background:var(--red);color:#fff;font-size:10px;font-weight:800;
+    letter-spacing:1.2px;text-transform:uppercase;padding:5px 11px;border-radius:999px;margin-bottom:10px}
+  .example-strip p{margin:0;font-size:14px;line-height:1.65;color:#e8e8ec}
+  .example-strip b{color:#fff}
+  .example-strip .hl{color:var(--red-bright);font-weight:700}
+
+  footer.foot{max-width:1180px;margin:0 auto;padding:26px 20px 0;display:flex;
+    justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+    border-top:1px solid var(--line);margin-top:40px}
+  footer.foot .fl{font-size:13px;color:var(--gray-mid);font-weight:600}
+  footer.foot .fr{font-size:12px;color:var(--gray-soft)}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="accent-bar"></div>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand">
+      <div class="mark">IVORY<span>CENTER</span></div>
+      <div class="div"></div>
+      <div class="sub">Utah&ndash;Moldova<br>Business Partnership</div>
+    </div>
+    <div class="pill">Pricing Calculator</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h1>Price Builder</h1>
+    <p class="lede">The price must cover what it costs to <b>deliver</b> the product, what it costs to
+      <b>acquire</b> the customer through ads, and the <b>profit</b> you want to keep. Set your numbers
+      below and the recommended price updates instantly.</p>
+
+    <div class="formula">
+      <div class="f-term" style="--m:var(--c-fulfill)">
+        <div class="k">Fulfillment cost</div>
+        <div class="v">Make / deliver it</div>
+      </div>
+      <div class="f-op">+</div>
+      <div class="f-term" style="--m:var(--c-cac)">
+        <div class="k">Acquisition cost (CAC)</div>
+        <div class="v">Win the customer</div>
+      </div>
+      <div class="f-op">+</div>
+      <div class="f-term" style="--m:var(--c-profit)">
+        <div class="k">Profit margin</div>
+        <div class="v">What you keep</div>
+      </div>
+      <div class="f-op">=</div>
+      <div class="f-term price" style="--m:var(--red-bright)">
+        <div class="k">Your price</div>
+        <div class="v" id="formulaPrice">&mdash;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="ctrl-group">
+      <span class="lbl">Currency</span>
+      <div class="seg" id="currencySeg" role="group" aria-label="Currency">
+        <button data-cur="MDL" aria-pressed="true">MDL</button>
+        <button data-cur="EUR" aria-pressed="false">€ EUR</button>
+        <button data-cur="USD" aria-pressed="false">$ USD</button>
+      </div>
+    </div>
+    <div class="presets">
+      <span class="lbl">Load a worked example</span>
+      <div class="preset-btns">
+        <button class="btn" id="exConsulting"><span class="dot"></span>Financial consulting (€)</button>
+        <button class="btn" id="exPhoto"><span class="dot"></span>Photography rental + ads (MDL)</button>
+        <button class="btn ghost" id="exClear">Clear</button>
+      </div>
+    </div>
+    <div class="ctrl-group export-group">
+      <span class="lbl">Save your work</span>
+      <div class="export-row">
+        <button class="btn export-btn" id="btnExport">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/></svg>
+          Export to Excel
+        </button>
+        <span class="export-status" id="exportStatus" aria-live="polite"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="grid">
+
+    <!-- INPUTS -->
+    <div>
+      <!-- 1. Fulfillment -->
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-h fulfill">
+          <div class="num">1</div><h3>Fulfillment costs</h3>
+          <div class="hint">per unit / customer</div>
+        </div>
+        <div class="card-b">
+          <div class="subseg">
+            <div class="seg" id="varModeSeg" role="group" aria-label="Variable cost entry" style="width:100%">
+              <button data-mode="perunit" aria-pressed="true" style="flex:1">Enter per unit</button>
+              <button data-mode="total" aria-pressed="false" style="flex:1">Enter total / month</button>
+            </div>
+          </div>
+          <div class="field" id="varPerUnit">
+            <label for="varCost">Variable cost per unit
+              <span class="tip">materials, direct labour,<br>packaging, payment fees</span></label>
+            <div class="inp"><span class="pre cur-pre"></span>
+              <input id="varCost" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
+              <span class="suf">/ unit</span></div>
+          </div>
+          <div class="field hidden" id="varTotalWrap">
+            <label for="varTotal">Total variable cost / month
+              <span class="tip">all variable costs for a<br>month of sales combined</span></label>
+            <div class="inp"><span class="pre cur-pre"></span>
+              <input id="varTotal" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
+              <span class="suf">/ month</span></div>
+          </div>
+          <div class="field">
+            <label for="fixedMonthly">Monthly fixed costs
+              <span class="tip">rent, base salaries,<br>software, insurance</span></label>
+            <div class="inp"><span class="pre cur-pre"></span>
+              <input id="fixedMonthly" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
+              <span class="suf">/ month</span></div>
+          </div>
+          <div class="field">
+            <label for="units">Expected units sold per month
+              <span class="tip">how many you realistically<br>sell each month</span></label>
+            <div class="inp">
+              <input id="units" type="number" min="0" step="any" inputmode="numeric" placeholder="0" style="padding-left:12px">
+              <span class="suf">units</span></div>
+          </div>
+          <div class="derived-group" style="display:flex;flex-direction:column;gap:7px">
+            <div class="derived hidden" id="varPerUnitOutRow">
+              <span>Variable cost per unit <i style="font-style:normal;color:var(--red)">(auto)</i></span><b id="varPerUnitOut">&mdash;</b>
+            </div>
+            <div class="derived" id="varTotalRow">
+              <span>Total variable cost / month</span><b id="varTotalOut">&mdash;</b>
+            </div>
+            <div class="derived">
+              <span>Fixed cost spread per unit</span><b id="fixedPerUnit">&mdash;</b>
+            </div>
+            <div class="derived">
+              <span>Total fulfillment cost per unit</span><b id="fulfillOut">&mdash;</b>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. CAC -->
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-h cac">
+          <div class="num">2</div><h3>Customer acquisition (CAC)</h3>
+        </div>
+        <div class="card-b">
+          <div class="subseg">
+            <div class="seg" id="cacModeSeg" role="group" aria-label="CAC mode" style="width:100%">
+              <button data-mode="direct" aria-pressed="true" style="flex:1">I know my CAC</button>
+              <button data-mode="funnel" aria-pressed="false" style="flex:1">Build from ad funnel</button>
+            </div>
+          </div>
+
+          <div id="cacDirect">
+            <div class="field">
+              <label for="cacInput">Cost to acquire one customer
+                <span class="tip">total ad spend &divide;<br>customers won</span></label>
+              <div class="inp"><span class="pre cur-pre"></span>
+                <input id="cacInput" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
+                <span class="suf">/ customer</span></div>
+            </div>
+          </div>
+
+          <div id="cacFunnel" class="hidden">
+            <p style="margin:0 0 13px;font-size:12px;color:var(--gray-mid);font-weight:500">Just count what your ads did &mdash; no percentages needed.</p>
+            <div class="field">
+              <label for="cpc">Cost per click (CPC)
+                <span class="tip">what Meta / Google charge<br>per ad click</span></label>
+              <div class="inp"><span class="pre cur-pre"></span>
+                <input id="cpc" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
+                <span class="suf">/ click</span></div>
+            </div>
+            <div class="field">
+              <label for="clicks">How many clicks did you get?
+                <span class="tip">total ad clicks<br>in the period</span></label>
+              <div class="inp">
+                <input id="clicks" type="number" min="0" step="any" inputmode="numeric" placeholder="0" style="padding-left:12px">
+                <span class="suf">clicks</span></div>
+            </div>
+            <div class="field">
+              <label for="leads">How many leads did you get?
+                <span class="tip">clicks that turned into<br>an inquiry / message</span></label>
+              <div class="inp">
+                <input id="leads" type="number" min="0" step="any" inputmode="numeric" placeholder="0" style="padding-left:12px">
+                <span class="suf">leads</span></div>
+            </div>
+            <div class="field">
+              <label for="customers">How many paying customers?
+                <span class="tip">leads that actually<br>bought / booked</span></label>
+              <div class="inp">
+                <input id="customers" type="number" min="0" step="any" inputmode="numeric" placeholder="0" style="padding-left:12px">
+                <span class="suf">customers</span></div>
+            </div>
+            <div class="derived"><span>Total ad spend (CPC &times; clicks)</span><b id="spendOut">&mdash;</b></div>
+            <div class="derived" style="margin-top:7px"><span>Cost per lead (CPL)</span><b id="cplOut">&mdash;</b></div>
+            <div class="derived" style="margin-top:7px"><span>Resulting CAC per customer</span><b id="cacFunnelOut">&mdash;</b></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Profit -->
+      <div class="card">
+        <div class="card-h profit">
+          <div class="num">3</div><h3>Profit</h3>
+        </div>
+        <div class="card-b">
+          <div class="subseg">
+            <div class="seg" id="profitModeSeg" role="group" aria-label="Profit mode" style="width:100%">
+              <button data-mode="margin" aria-pressed="true" style="flex:1">Margin (% of price)</button>
+              <button data-mode="markup" aria-pressed="false" style="flex:1">Markup (% of cost)</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="profitPct" id="profitLabel">Target profit margin
+              <span class="tip" id="profitTip">profit as a share<br>of the final price</span></label>
+            <div class="inp">
+              <input id="profitPct" type="number" min="0" step="any" inputmode="decimal" placeholder="0" style="padding-left:12px">
+              <span class="suf">%</span></div>
+          </div>
+          <div class="derived"><span id="profitAltLabel">Equivalent markup on cost</span><b id="profitAlt">&mdash;</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div>
+      <div class="result-price">
+        <div class="rp-k">Recommended price per unit</div>
+        <div class="rp-v" id="priceBig">&mdash;</div>
+        <div class="rp-sub" id="priceSub">Enter your costs to see the price.</div>
+        <div class="warn hidden" id="priceWarn"></div>
+      </div>
+
+      <div class="totals-box" id="totalsBox">
+        <div class="tb-head">Your month, in total <span id="tbUnits"></span></div>
+        <div class="tb-grid">
+          <div class="tb-stat revenue">
+            <div class="tb-k">Total revenue / month</div>
+            <div class="tb-v" id="tRevenue">&mdash;</div>
+          </div>
+          <div class="tb-stat profit">
+            <div class="tb-k">Total profit / month</div>
+            <div class="tb-v" id="tProfit">&mdash;</div>
+          </div>
+        </div>
+        <div class="tb-foot">
+          <span>Ad budget (CAC &times; units): <b id="tAdSpend">&mdash;</b></span>
+          <span>All costs: <b id="tCosts">&mdash;</b></span>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-h"><div class="num" style="background:var(--red);color:#fff">%</div>
+          <h3>What makes up the price</h3></div>
+        <div class="card-b">
+          <div class="bar-wrap">
+            <div class="bar" id="bar">
+              <div class="seg-f" id="barF" style="flex:1 1 0"></div>
+              <div class="seg-c" id="barC" style="flex:0 0 0"></div>
+              <div class="seg-p" id="barP" style="flex:0 0 0"></div>
+            </div>
+            <div class="legend-row">
+              <span class="lg"><span class="sw" style="background:var(--c-fulfill)"></span>Fulfillment <b id="pctF" style="margin-left:4px">&mdash;</b></span>
+              <span class="lg"><span class="sw" style="background:var(--c-cac)"></span>Acquisition <b id="pctC" style="margin-left:4px">&mdash;</b></span>
+              <span class="lg"><span class="sw" style="background:var(--c-profit)"></span>Profit <b id="pctP" style="margin-left:4px">&mdash;</b></span>
+            </div>
+          </div>
+
+          <table class="breakdown" style="margin-top:18px">
+            <tr><td class="lab"><span class="sw" style="background:var(--c-fulfill)"></span>Variable cost / unit</td><td class="val" id="rVar">&mdash;</td></tr>
+            <tr><td class="lab"><span class="sw" style="background:var(--c-fulfill)"></span>Fixed cost / unit</td><td class="val" id="rFixed">&mdash;</td></tr>
+            <tr class="sum"><td class="lab">= Fulfillment cost</td><td class="val" id="rFulfill">&mdash;</td></tr>
+            <tr><td class="lab"><span class="sw" style="background:var(--c-cac)"></span>+ Customer acquisition (CAC)</td><td class="val" id="rCac">&mdash;</td></tr>
+            <tr class="floor"><td class="lab">= Break-even price (cost floor)</td><td class="val" id="rFloor">&mdash;</td></tr>
+            <tr><td class="lab"><span class="sw" style="background:var(--c-profit)"></span>+ Profit</td><td class="val" id="rProfit">&mdash;</td></tr>
+            <tr class="grand"><td class="lab">= Recommended price</td><td class="val" id="rPrice">&mdash;</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-h"><div class="num" style="background:var(--ink);color:#fff">&#8776;</div>
+          <h3>Reality check</h3></div>
+        <div class="card-b">
+          <div class="metrics">
+            <div class="metric"><div class="mk">Suggested round price</div><div class="mv" id="mRound">&mdash;</div></div>
+            <div class="metric"><div class="mk">Profit margin</div><div class="mv" id="mMargin">&mdash;</div></div>
+            <div class="metric"><div class="mk">Markup on cost</div><div class="mv" id="mMarkup">&mdash;</div></div>
+            <div class="metric" id="beMetric"><div class="mk">Break-even units / mo</div><div class="mv" id="mBE">&mdash;</div></div>
+          </div>
+          <div class="be-note" id="beNote">
+            At this price, work out how many units you must sell each month just to cover your fixed
+            and ad costs &mdash; then ask whether that volume is realistic for your capacity.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend / Glossary -->
+  <div class="section-title">
+    <span class="pill">Legend</span>
+    <h2>What each entry means</h2>
+  </div>
+
+  <div class="glossary">
+    <div class="term">
+      <h4><span class="sw" style="background:var(--c-fulfill)"></span>Variable cost per unit</h4>
+      <p>Costs that occur <b>every time you make one more sale</b> &mdash; raw materials, ingredients,
+        direct labour on that unit, packaging and payment-processing fees.</p>
+      <div class="ex"><span class="tag">Example</span>One photo-studio booking costs <b>50 MDL</b> in cleaning, electricity and wear.</div>
+    </div>
+
+    <div class="term">
+      <h4><span class="sw" style="background:var(--c-fulfill)"></span>Monthly fixed costs &amp; units</h4>
+      <p>Fixed costs stay the same whether you sell 1 or 1,000 &mdash; rent, base salaries, software,
+        insurance. Divided by your <b>expected monthly units</b>, they give the fixed cost carried by each unit.</p>
+      <div class="ex"><span class="tag">Example</span><b>10,000 MDL</b> studio rent &divide; <b>40</b> bookings = <b>250 MDL</b> of fixed cost per booking.</div>
+    </div>
+
+    <div class="term">
+      <h4><span class="sw" style="background:var(--c-cac)"></span>Customer acquisition cost (CAC)</h4>
+      <p>The real cost of <b>getting one paying customer</b> through advertising. Either enter it directly
+        (total ad spend &divide; customers won) or build it from your ad funnel below.</p>
+      <div class="ex"><span class="tag">Example</span>A consulting client costs <b>€60</b> to acquire via ads &mdash; that €60 must be built into the retainer.</div>
+    </div>
+
+    <div class="term">
+      <h4><span class="sw" style="background:var(--c-cac)"></span>The ad funnel (just count it)</h4>
+      <p>No percentages to work out &mdash; just read the numbers off your ad dashboard: how many
+        <b>clicks</b>, how many <b>leads</b> (inquiries), and how many <b>paying customers</b>.</p>
+      <p style="font-size:12px;color:var(--gray-mid)">Ad spend = CPC &times; clicks&nbsp;&nbsp;·&nbsp;&nbsp;CPL = spend &divide; leads&nbsp;&nbsp;·&nbsp;&nbsp;CAC = spend &divide; customers</p>
+      <div class="ex"><span class="tag">Example</span>CPC <b>5 MDL</b> &times; <b>400</b> clicks = 2,000 MDL; <b>20</b> booked &rarr; CAC <b>100 MDL</b>.</div>
+    </div>
+
+    <div class="term">
+      <h4><span class="sw" style="background:var(--c-profit)"></span>Profit: margin vs. markup</h4>
+      <p><b>Margin</b> is profit as a share of the <b>price</b>; <b>markup</b> is profit as a share of the
+        <b>cost</b>. A 50% markup is only a 33% margin &mdash; the tool shows both so they're never confused.</p>
+      <div class="ex"><span class="tag">Example</span>Cost <b>70</b>, price <b>100</b> &rarr; 30% margin = 42.9% markup.</div>
+    </div>
+
+    <div class="term">
+      <h4><span class="sw" style="background:var(--red)"></span>Break-even price &amp; units</h4>
+      <p>The <b>break-even price</b> is fulfillment + CAC &mdash; the floor below which you lose money on
+        every sale. <b>Break-even units</b> is how many you must sell monthly to cover fixed costs at your price.</p>
+      <div class="ex"><span class="tag">Example</span>At <b>667 MDL</b> a booking, a studio needs ~<b>22</b> bookings a month to cover its fixed + ad costs.</div>
+    </div>
+
+    <div class="term">
+      <h4><span class="sw" style="background:var(--red)"></span>Total revenue &amp; profit / month</h4>
+      <p>The per-unit price &times; your <b>expected units per month</b> gives the money actually flowing through
+        the business: <b>revenue</b> (everything you take in) and <b>profit</b> (what's left after all costs and ads).</p>
+      <div class="ex"><span class="tag">Example</span><b>667 MDL</b> &times; 40 bookings = <b>26,667 MDL</b> revenue, ~<b>10,667 MDL</b> profit a month.</div>
+    </div>
+  </div>
+
+  <div class="example-strip" style="margin-top:18px">
+    <span class="tag">Worked example</span>
+    <p>Load <b>&ldquo;Photography rental + ads&rdquo;</b> above: 50 variable + 250 fixed = <b>300 MDL</b> fulfillment.
+      The funnel &mdash; <span class="hl">5 MDL &times; 400 clicks</span>, 20 bookings &mdash; gives a <span class="hl">100 MDL CAC</span>,
+      so the cost floor is <b>400 MDL</b>. A <b>40% margin</b> sets the price near <span class="hl">667 MDL</span> a session.
+      Across 40 bookings that's <b>~26,667 MDL</b> revenue and <b>~10,667 MDL</b> profit a month. Drop the CAC and watch
+      the price fall &mdash; that gap is exactly what new businesses forget to charge for.</p>
+  </div>
+
+  <footer class="foot">
+    <div class="fl">ivorycenter.md</div>
+  </footer>
+</div>
+
+<script src="/tools/vendor/xlsx-js-style-1.2.0.bundle.js"></script>
+<script>
+(function(){
+  "use strict";
+  var CUR = {
+    MDL:{sym:"MDL",pre:"",suf:"MDL",dec:0,big:function(v){return fmt(v,0)+" MDL";}},
+    EUR:{sym:"€",pre:"€",suf:"€",dec:2,big:function(v){return v;}},
+    USD:{sym:"$",pre:"$",suf:"$",dec:2,big:function(v){return v;}}
+  };
+  var state = { cur:"MDL", varMode:"perunit", cacMode:"direct", profitMode:"margin" };
+  var last = null;  // snapshot of the latest computation, for export
+
+  var $ = function(id){return document.getElementById(id);};
+  var ids = ["varCost","varTotal","fixedMonthly","units","cacInput","cpc","clicks","leads","customers","profitPct"];
+
+  function num(id){ var v = parseFloat($(id).value); return isFinite(v)&&v>0 ? v : 0; }
+
+  function fmt(v, dec){
+    if(!isFinite(v)) return "—";
+    dec = (dec===undefined)? CUR[state.cur].dec : dec;
+    return v.toLocaleString("en-US",{minimumFractionDigits:dec,maximumFractionDigits:dec});
+  }
+  // money string with currency symbol placed correctly
+  function money(v){
+    if(!isFinite(v)) return "—";
+    var c = CUR[state.cur];
+    if(state.cur==="MDL") return fmt(v,c.dec)+" MDL";
+    return c.sym + fmt(v, smartDec(v));
+  }
+  // use 2 decimals for small values (CPC etc.), 0-2 otherwise
+  function smartDec(v){
+    if(state.cur==="MDL") return 0;
+    return (Math.abs(v)>0 && Math.abs(v)<10) ? 2 : 2;
+  }
+  function pct(v){ return isFinite(v)? (Math.round(v*10)/10).toLocaleString("en-US")+"%" : "—"; }
+
+  function roundNice(v){
+    if(!isFinite(v)||v<=0) return v;
+    if(state.cur==="MDL"){
+      if(v<100) return Math.ceil(v/5)*5;      // nearest 5
+      if(v<1000) return Math.ceil(v/10)*10;   // nearest 10
+      return Math.ceil(v/50)*50;
+    }
+    if(v<20) return Math.ceil(v);             // nearest 1
+    if(v<100) return Math.ceil(v/5)*5;        // nearest 5
+    return Math.ceil(v/10)*10;
+  }
+
+  function calc(){
+    var c = CUR[state.cur];
+    // 1. fulfillment
+    var fixedMonthly = num("fixedMonthly");
+    var units = num("units");
+    var varCost, varTotal;
+    if(state.varMode==="total"){
+      varTotal = num("varTotal");
+      varCost  = units>0 ? varTotal/units : 0;
+    } else {
+      varCost  = num("varCost");
+      varTotal = varCost * units;
+    }
+    var fixedPerUnit = units>0 ? fixedMonthly/units : 0;
+    var fulfillment = varCost + fixedPerUnit;
+
+    // 2. CAC
+    var cac = 0, cpl = NaN;
+    if(state.cacMode==="direct"){
+      cac = num("cacInput");
+    } else {
+      var cpc = num("cpc"), clicks = num("clicks"), leads = num("leads"), custs = num("customers");
+      var spend = cpc * clicks;
+      cpl = leads>0 ? spend/leads : NaN;
+      cac = custs>0 ? spend/custs : 0;
+      $("spendOut").textContent = spend>0 ? money(spend) : "—";
+      $("cplOut").textContent = isFinite(cpl)? money(cpl) : "—";
+      $("cacFunnelOut").textContent = cac>0 ? money(cac) : "—";
+    }
+
+    var costBase = fulfillment + cac;   // break-even price / floor
+
+    // 3. profit
+    var p = num("profitPct");
+    var price, profit, warn="";
+    if(state.profitMode==="margin"){
+      if(p>=100){ price = Infinity; profit = Infinity; warn="A margin of 100% or more is impossible — profit can never be the whole price. Try a markup instead."; }
+      else { price = costBase/(1 - p/100); profit = price - costBase; }
+    } else {
+      price = costBase*(1 + p/100); profit = price - costBase;
+    }
+
+    var marginEq = (isFinite(price)&&price>0)? profit/price*100 : NaN;
+    var markupEq = (costBase>0)? profit/costBase*100 : NaN;
+
+    // ---- derived input echoes ----
+    $("varPerUnitOut").textContent = (state.varMode==="total" && units>0) ? money(varCost) : "—";
+    $("varTotalOut").textContent = varTotal ? money(varTotal) : "—";
+    $("fixedPerUnit").textContent = units>0 ? money(fixedPerUnit) : "—";
+    $("fulfillOut").textContent = (varCost||fixedPerUnit) ? money(fulfillment) : "—";
+    // profit alt (opposite representation)
+    if(state.profitMode==="margin"){
+      $("profitAltLabel").textContent = "Equivalent markup on cost";
+      $("profitAlt").textContent = isFinite(markupEq)&&costBase>0 ? pct(markupEq) : "—";
+    } else {
+      $("profitAltLabel").textContent = "Equivalent margin on price";
+      $("profitAlt").textContent = isFinite(marginEq)&&price>0 ? pct(marginEq) : "—";
+    }
+
+    var hasAny = (fulfillment>0 || cac>0);
+
+    // ---- headline price ----
+    if(!hasAny){
+      $("priceBig").innerHTML = "&mdash;";
+      $("priceSub").textContent = "Enter your costs to see the price.";
+      $("formulaPrice").innerHTML = "&mdash;";
+    } else if(!isFinite(price)){
+      $("priceBig").innerHTML = "&mdash;";
+      $("priceSub").textContent = "Adjust the profit input.";
+      $("formulaPrice").innerHTML = "&mdash;";
+    } else {
+      var curTag = (state.cur==="MDL") ? "" : "<span class='cur'>"+c.sym+"</span>";
+      var priceStr = (state.cur==="MDL") ? fmt(price,0)+" <span style='font-size:.5em;font-weight:700;color:var(--red-bright)'>MDL</span>" : curTag+fmt(price,2);
+      $("priceBig").innerHTML = priceStr;
+      $("priceSub").innerHTML = "Covers delivery, acquisition and a <b>"+pct(isFinite(marginEq)?marginEq:0)+"</b> profit margin.";
+      $("formulaPrice").textContent = money(price);
+    }
+    // warning
+    var w = $("priceWarn");
+    if(warn){ w.textContent = warn; w.classList.remove("hidden"); } else { w.classList.add("hidden"); }
+
+    // ---- composition bar ----
+    var parts = hasAny && isFinite(price) && price>0;
+    var fF = parts? fulfillment/price*100 : 100;
+    var fC = parts? cac/price*100 : 0;
+    var fP = parts? Math.max(profit,0)/price*100 : 0;
+    $("barF").style.flexBasis = fF+"%"; $("barF").textContent = parts&&fF>8? Math.round(fF)+"%":"";
+    $("barC").style.flexBasis = fC+"%"; $("barC").textContent = parts&&fC>8? Math.round(fC)+"%":"";
+    $("barP").style.flexBasis = fP+"%"; $("barP").textContent = parts&&fP>8? Math.round(fP)+"%":"";
+    $("barF").style.flexGrow = parts?0:1;
+    $("pctF").textContent = parts? pct(fF):"—";
+    $("pctC").textContent = parts? pct(fC):"—";
+    $("pctP").textContent = parts? pct(fP):"—";
+
+    // ---- monthly totals (revenue & profit) ----
+    var canTotal = hasAny && isFinite(price) && units>0;
+    var revenue = canTotal ? price*units : NaN;
+    var monthlyProfit = canTotal ? profit*units : NaN;
+    var monthlyAd = units>0 ? cac*units : NaN;
+    var monthlyCosts = (isFinite(revenue)&&isFinite(monthlyProfit)) ? revenue - monthlyProfit : NaN;
+    $("tbUnits").textContent = units>0 ? "at "+fmt(units,0)+" units / month" : "";
+    $("tRevenue").textContent = isFinite(revenue)? money(revenue) : "—";
+    $("tProfit").textContent  = isFinite(monthlyProfit)? money(monthlyProfit) : "—";
+    $("tAdSpend").textContent = (units>0 && cac>0)? money(monthlyAd) : (units>0? money(0):"—");
+    $("tCosts").textContent   = isFinite(monthlyCosts)? money(monthlyCosts) : "—";
+    $("totalsBox").style.opacity = canTotal ? "1" : ".55";
+
+    // ---- breakdown table ----
+    $("rVar").textContent = varCost? money(varCost):"—";
+    $("rFixed").textContent = units>0? money(fixedPerUnit):"—";
+    $("rFulfill").textContent = hasAny? money(fulfillment):"—";
+    $("rCac").textContent = money(cac);
+    $("rFloor").textContent = hasAny? money(costBase):"—";
+    $("rProfit").textContent = (hasAny&&isFinite(profit))? money(profit):"—";
+    $("rPrice").textContent = (hasAny&&isFinite(price))? money(price):"—";
+
+    // ---- metrics ----
+    $("mRound").textContent = (hasAny&&isFinite(price))? money(roundNice(price)):"—";
+    $("mMargin").textContent = (hasAny&&isFinite(marginEq))? pct(marginEq):"—";
+    $("mMarkup").textContent = (hasAny&&isFinite(markupEq))? pct(markupEq):"—";
+
+    // break-even units at this price: contribution = price - varCost - cac (per-customer variable)
+    var contrib = isFinite(price)? price - varCost - cac : NaN;
+    var beUnits = (contrib>0 && fixedMonthly>0)? fixedMonthly/contrib : NaN;
+    var beMetric = $("beMetric");
+    if(fixedMonthly>0 && isFinite(beUnits)){
+      $("mBE").innerHTML = Math.ceil(beUnits).toLocaleString("en-US");
+      // flag if break-even exceeds planned volume
+      if(units>0 && beUnits>units){ beMetric.classList.add("flag"); }
+      else{ beMetric.classList.remove("flag"); }
+      var cover = (units>0)? (units>=beUnits
+          ? "You plan to sell <b>"+fmt(units,0)+"</b>/mo and only need <b>"+Math.ceil(beUnits).toLocaleString("en-US")+"</b> to break even — healthy headroom."
+          : "You plan to sell <b>"+fmt(units,0)+"</b>/mo but need <b>"+Math.ceil(beUnits).toLocaleString("en-US")+"</b> to cover fixed costs — raise the price or the volume.")
+        : "You must sell <b>"+Math.ceil(beUnits).toLocaleString("en-US")+"</b> units/month at this price just to cover your fixed costs.";
+      $("beNote").innerHTML = cover;
+    } else {
+      $("mBE").innerHTML = "&mdash;";
+      beMetric.classList.remove("flag");
+      $("beNote").innerHTML = "At this price, work out how many units you must sell each month to cover your fixed and ad costs — then ask whether that volume is realistic for your capacity.";
+    }
+
+    // ---- snapshot for export ----
+    last = {
+      cur:state.cur, varMode:state.varMode, cacMode:state.cacMode, profitMode:state.profitMode, profitPct:p,
+      varCost:varCost, varTotal:varTotal, fixedMonthly:fixedMonthly, units:units,
+      fixedPerUnit:fixedPerUnit, fulfillment:fulfillment,
+      cpc:num("cpc"), clicks:num("clicks"), leads:num("leads"), customers:num("customers"),
+      spend:(state.cacMode==="funnel" ? num("cpc")*num("clicks") : NaN),
+      cpl:cpl, cac:cac, costBase:costBase, price:price,
+      roundPrice:(isFinite(price)? roundNice(price) : NaN),
+      profit:profit, marginEq:marginEq, markupEq:markupEq, beUnits:beUnits,
+      revenue:revenue, monthlyProfit:monthlyProfit, monthlyAd:monthlyAd, monthlyCosts:monthlyCosts,
+      valid:(hasAny && isFinite(price))
+    };
+  }
+
+  // ---- currency symbols on inputs ----
+  function paintCurrency(){
+    var token = (state.cur==="MDL") ? "MDL" : CUR[state.cur].sym;
+    var pre = document.querySelectorAll(".cur-pre");
+    for(var i=0;i<pre.length;i++){ pre[i].textContent = token; }
+  }
+
+  // ---- segmented controls ----
+  function bindSeg(segId, cb){
+    var seg = $(segId);
+    seg.addEventListener("click", function(e){
+      var b = e.target.closest("button"); if(!b) return;
+      var btns = seg.querySelectorAll("button");
+      for(var i=0;i<btns.length;i++) btns[i].setAttribute("aria-pressed", btns[i]===b ? "true":"false");
+      cb(b);
+    });
+  }
+
+  function applyVarMode(){
+    var total = state.varMode==="total";
+    $("varPerUnit").classList.toggle("hidden", total);
+    $("varTotalWrap").classList.toggle("hidden", !total);
+    $("varPerUnitOutRow").classList.toggle("hidden", !total);
+    $("varTotalRow").classList.toggle("hidden", total);
+  }
+
+  bindSeg("currencySeg", function(b){ state.cur = b.getAttribute("data-cur"); paintCurrency(); calc(); });
+  bindSeg("varModeSeg", function(b){ state.varMode = b.getAttribute("data-mode"); applyVarMode(); calc(); });
+  bindSeg("cacModeSeg", function(b){
+    state.cacMode = b.getAttribute("data-mode");
+    $("cacDirect").classList.toggle("hidden", state.cacMode!=="direct");
+    $("cacFunnel").classList.toggle("hidden", state.cacMode!=="funnel");
+    calc();
+  });
+  bindSeg("profitModeSeg", function(b){
+    state.profitMode = b.getAttribute("data-mode");
+    if(state.profitMode==="margin"){
+      $("profitLabel").childNodes[0].nodeValue = "Target profit margin ";
+      $("profitTip").innerHTML = "profit as a share<br>of the final price";
+    } else {
+      $("profitLabel").childNodes[0].nodeValue = "Target markup on cost ";
+      $("profitTip").innerHTML = "profit added on top<br>of total cost";
+    }
+    calc();
+  });
+
+  // ---- live recalculation ----
+  for(var i=0;i<ids.length;i++){ $(ids[i]).addEventListener("input", calc); }
+
+  // ---- presets ----
+  function setSeg(segId, attr, val){
+    var seg=$(segId), btns=seg.querySelectorAll("button"), hit=null;
+    for(var i=0;i<btns.length;i++){ var on = btns[i].getAttribute(attr)===val; btns[i].setAttribute("aria-pressed",on?"true":"false"); if(on) hit=btns[i]; }
+    return hit;
+  }
+  function fill(v){ for(var k in v){ if($(k)) $(k).value = v[k]; } }
+  function clearAll(){ for(var i=0;i<ids.length;i++) $(ids[i]).value=""; }
+
+  // Financial consulting — monthly retainer per client, known (direct) CAC
+  $("exConsulting").addEventListener("click", function(){
+    state.cur="EUR"; setSeg("currencySeg","data-cur","EUR");
+    state.varMode="perunit"; setSeg("varModeSeg","data-mode","perunit"); applyVarMode();
+    state.cacMode="direct"; setSeg("cacModeSeg","data-mode","direct");
+    $("cacDirect").classList.remove("hidden"); $("cacFunnel").classList.add("hidden");
+    state.profitMode="margin"; setSeg("profitModeSeg","data-mode","margin");
+    $("profitLabel").childNodes[0].nodeValue="Target profit margin ";
+    $("profitTip").innerHTML="profit as a share<br>of the final price";
+    clearAll();
+    fill({varCost:25, fixedMonthly:2000, units:10, cacInput:60, profitPct:40});
+    paintCurrency(); calc();
+  });
+
+  // Photography rental — per-session price, CAC built from ad-funnel counts
+  $("exPhoto").addEventListener("click", function(){
+    state.cur="MDL"; setSeg("currencySeg","data-cur","MDL");
+    state.varMode="perunit"; setSeg("varModeSeg","data-mode","perunit"); applyVarMode();
+    state.cacMode="funnel"; setSeg("cacModeSeg","data-mode","funnel");
+    $("cacDirect").classList.add("hidden"); $("cacFunnel").classList.remove("hidden");
+    state.profitMode="margin"; setSeg("profitModeSeg","data-mode","margin");
+    $("profitLabel").childNodes[0].nodeValue="Target profit margin ";
+    $("profitTip").innerHTML="profit as a share<br>of the final price";
+    clearAll();
+    fill({varCost:50, fixedMonthly:10000, units:40, cpc:5, clicks:400, leads:40, customers:20, profitPct:40});
+    paintCurrency(); calc();
+  });
+
+  $("exClear").addEventListener("click", function(){ clearAll(); calc(); });
+
+
+  // ================= XLSX EXPORT =================
+// ===== shared workbook builder WITH LIVE FORMULAS (identical code runs in the browser) =====
+function buildPricingWorkbook(XLSX, d){
+  var cur = d.cur || "MDL";
+  function mfmt(){ return cur==="MDL" ? '#,##0.00" MDL"' : (cur==="USD" ? '"$"#,##0.00' : '"\u20AC"#,##0.00'); }
+  var MF = mfmt(), PF = "0.0%", UF = "#,##0";
+  var curName = cur==="MDL" ? "Moldovan lei (MDL)" : (cur==="USD" ? "US dollars ($)" : "Euro (\u20AC)");
+  function fin(x){ return (typeof x==="number" && isFinite(x)) ? x : ""; }
+
+  var rows = [];
+  function push(o){ rows.push(o); return rows.length-1; }   // returns 0-based row index
+  function B(i){ return "B"+(i+1); }                        // value cell address for a row index
+
+  push({t:"title", a:"UMBP \u00B7 Price Builder"});
+  push({t:"sub",   a:"Live workbook \u2014 edit the yellow input cells and everything recalculates."});
+  push({t:"kv", a:"Currency", b:curName, text:true});
+  push({t:"blank"});
+
+  push({t:"sec", a:"Step 1 \u2014 Fulfillment cost (to make / deliver it)"});
+  var iVar, iVarTot;
+  if(d.varMode==="total"){
+    iVar    = push({t:"kv", a:"Variable cost per unit", b:fin(d.varCost), f:MF});
+    iVarTot = push({t:"kv", a:"Total variable cost / month", b:fin(d.varTotal), f:MF, input:true});
+  } else {
+    iVar    = push({t:"kv", a:"Variable cost per unit", b:fin(d.varCost), f:MF, input:true});
+    iVarTot = push({t:"kv", a:"Total variable cost / month", b:fin(d.varTotal), f:MF});
+  }
+  var iFixed = push({t:"kv", a:"Monthly fixed costs", b:fin(d.fixedMonthly), f:MF, input:true});
+  var iUnits = push({t:"kv", a:"Expected units / month", b:fin(d.units), f:UF, input:true});
+  var iFPU   = push({t:"kv", a:"Fixed cost per unit", b:fin(d.fixedPerUnit), f:MF});
+  var iFulf  = push({t:"kv", a:"Fulfillment per unit", b:fin(d.fulfillment), f:MF, emph:true});
+  if(d.varMode==="total"){
+    rows[iVar].fo = "IF("+B(iUnits)+"=0,0,"+B(iVarTot)+"/"+B(iUnits)+")";
+  } else {
+    rows[iVarTot].fo = B(iVar)+"*"+B(iUnits);
+  }
+  rows[iFPU].fo  = "IF("+B(iUnits)+"=0,0,"+B(iFixed)+"/"+B(iUnits)+")";
+  rows[iFulf].fo = B(iVar)+"+"+B(iFPU);
+  push({t:"blank"});
+
+  push({t:"sec", a:"Step 2 \u2014 Customer acquisition cost (CAC)"});
+  var iCacUsed;
+  if(d.cacMode==="funnel"){
+    push({t:"kv", a:"Source", b:"Ad funnel (counted)", text:true});
+    var iCpc   = push({t:"kv", a:"Cost per click (CPC)", b:fin(d.cpc), f:MF, input:true});
+    var iClick = push({t:"kv", a:"Clicks", b:fin(d.clicks), f:UF, input:true});
+    var iLead  = push({t:"kv", a:"Leads", b:fin(d.leads), f:UF, input:true});
+    var iCust  = push({t:"kv", a:"Paying customers", b:fin(d.customers), f:UF, input:true});
+    var iSpend = push({t:"kv", a:"Total ad spend (CPC \u00D7 clicks)", b:fin(d.spend), f:MF});
+    var iCpl   = push({t:"kv", a:"Cost per lead (CPL)", b:fin(d.cpl), f:MF});
+    iCacUsed   = push({t:"kv", a:"CAC per customer (used in price)", b:fin(d.cac), f:MF, emph:true});
+    rows[iSpend].fo   = B(iCpc)+"*"+B(iClick);
+    rows[iCpl].fo     = "IF("+B(iLead)+"=0,0,"+B(iSpend)+"/"+B(iLead)+")";
+    rows[iCacUsed].fo = "IF("+B(iCust)+"=0,0,"+B(iSpend)+"/"+B(iCust)+")";
+  } else {
+    push({t:"kv", a:"Source", b:"Entered directly", text:true});
+    iCacUsed = push({t:"kv", a:"CAC per customer (used in price)", b:fin(d.cac), f:MF, input:true, emph:true});
+  }
+  push({t:"blank"});
+
+  push({t:"sec", a:"Step 3 \u2014 Profit"});
+  push({t:"kv", a:"Method", b:(d.profitMode==="markup"?"Markup (% of cost)":"Margin (% of price)"), text:true});
+  var iPct = push({t:"kv", a:(d.profitMode==="markup"?"Target markup":"Target margin"), b:fin(d.profitPct/100), f:PF, input:true});
+  push({t:"blank"});
+
+  push({t:"sec", a:"Result"});
+  var iFloor = push({t:"kv", a:"Cost floor (fulfillment + CAC)", b:fin(d.costBase), f:MF});
+  var iPrice = push({t:"kv", a:"RECOMMENDED PRICE", b:fin(d.price), f:MF, red:true});
+  var iRound = push({t:"kv", a:"Suggested round price", b:fin(d.roundPrice), f:MF});
+  var iPU    = push({t:"kv", a:"Profit per unit", b:fin(d.profit), f:MF});
+  var iMarg  = push({t:"kv", a:"Profit margin", b:fin(d.marginEq/100), f:PF});
+  var iMark  = push({t:"kv", a:"Markup on cost", b:fin(d.markupEq/100), f:PF});
+  var iBE    = push({t:"kv", a:"Break-even units / month", b:(isFinite(d.beUnits)?Math.ceil(d.beUnits):""), f:UF});
+  rows[iFloor].fo = B(iFulf)+"+"+B(iCacUsed);
+  rows[iPrice].fo = (d.profitMode==="markup")
+      ? B(iFloor)+"*(1+"+B(iPct)+")"
+      : "IF((1-"+B(iPct)+")<=0,\"\","+B(iFloor)+"/(1-"+B(iPct)+"))";
+  rows[iRound].fo = (cur==="MDL")
+      ? "IF("+B(iPrice)+"<100,CEILING("+B(iPrice)+",5),IF("+B(iPrice)+"<1000,CEILING("+B(iPrice)+",10),CEILING("+B(iPrice)+",50)))"
+      : "IF("+B(iPrice)+"<20,CEILING("+B(iPrice)+",1),IF("+B(iPrice)+"<100,CEILING("+B(iPrice)+",5),CEILING("+B(iPrice)+",10)))";
+  rows[iPU].fo   = B(iPrice)+"-"+B(iFloor);
+  rows[iMarg].fo = "IF("+B(iPrice)+"=0,0,"+B(iPU)+"/"+B(iPrice)+")";
+  rows[iMark].fo = "IF("+B(iFloor)+"=0,0,"+B(iPU)+"/"+B(iFloor)+")";
+  rows[iBE].fo   = "IFERROR(ROUNDUP("+B(iFixed)+"/("+B(iPrice)+"-"+B(iVar)+"-"+B(iCacUsed)+"),0),\"\")";
+  push({t:"blank"});
+
+  push({t:"sec", a:"Your month, in total"});
+  var iTU   = push({t:"kv", a:"Units / month", b:fin(d.units), f:UF});
+  var iTRev = push({t:"kv", a:"Total revenue / month", b:fin(d.revenue), f:MF, emph:true});
+  var iTPft = push({t:"kv", a:"Total profit / month", b:fin(d.monthlyProfit), f:MF, red:true});
+  var iTAd  = push({t:"kv", a:"Ad budget / month (CAC \u00D7 units)", b:fin(d.monthlyAd), f:MF});
+  var iTC   = push({t:"kv", a:"All costs / month", b:fin(d.monthlyCosts), f:MF});
+  rows[iTU].fo   = B(iUnits);
+  rows[iTRev].fo = B(iPrice)+"*"+B(iUnits);
+  rows[iTPft].fo = B(iPU)+"*"+B(iUnits);
+  rows[iTAd].fo  = B(iCacUsed)+"*"+B(iUnits);
+  rows[iTC].fo   = B(iTRev)+"-"+B(iTPft);
+  push({t:"blank"});
+  push({t:"sub", a:"Yellow = your inputs (edit freely) \u00B7 everything else is a formula \u00B7 ivorycenter.md"});
+
+  // ---- render ----
+  var aoa = rows.map(function(r){ return [r.a!==undefined?r.a:"", r.b!==undefined?r.b:""]; });
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = [{wch:36},{wch:20}];
+  ws["!merges"] = [];
+  var RED="C10926", INK="111114", GRAY="5E5E66", LINE="E3E3E8", YEL="FFF7D6", BLU="0E5AA6";
+  function cell(r,c){ var a=XLSX.utils.encode_cell({r:r,c:c}); if(!ws[a]) ws[a]={t:"s",v:""}; return ws[a]; }
+  var rowHeights=[];
+  rows.forEach(function(r,i){
+    var A=cell(i,0), Bc=cell(i,1);
+    if(r.fo){ Bc.f = r.fo; }                 // live formula (cached value already present from aoa)
+    if(r.t==="title"){
+      A.s={font:{name:"Calibri",sz:15,bold:true,color:{rgb:"FFFFFF"}},fill:{fgColor:{rgb:RED}},alignment:{vertical:"center"}};
+      Bc.s={fill:{fgColor:{rgb:RED}}};
+      ws["!merges"].push({s:{r:i,c:0},e:{r:i,c:1}}); rowHeights[i]={hpt:26};
+    } else if(r.t==="sub"){
+      A.s={font:{name:"Calibri",sz:10,italic:true,color:{rgb:GRAY}}};
+      Bc.s={font:{name:"Calibri"}};
+      ws["!merges"].push({s:{r:i,c:0},e:{r:i,c:1}});
+    } else if(r.t==="sec"){
+      A.s={font:{name:"Calibri",sz:11,bold:true,color:{rgb:"FFFFFF"}},fill:{fgColor:{rgb:INK}},alignment:{vertical:"center"}};
+      Bc.s={fill:{fgColor:{rgb:INK}}};
+      ws["!merges"].push({s:{r:i,c:0},e:{r:i,c:1}}); rowHeights[i]={hpt:20};
+    } else if(r.t==="kv"){
+      var labColor = r.red?RED:INK;
+      A.s={font:{name:"Calibri",sz:11,bold:!!(r.red),color:{rgb:labColor}},
+           border:{bottom:{style:"thin",color:{rgb:LINE}}}, alignment:{vertical:"center"}};
+      var vFont = {name:"Calibri", sz:(r.red?12:11), bold:!!(r.emph||r.red||r.input),
+                   color:{rgb: r.input?BLU : (r.red?RED:INK)}};
+      Bc.s={font:vFont,
+            fill: r.input?{fgColor:{rgb:YEL}}:undefined,
+            alignment:{horizontal:(r.text?"left":"right"),vertical:"center"},
+            border:{bottom:{style:"thin",color:{rgb:LINE}}}};
+      if(r.f && typeof Bc.v==="number"){ Bc.z=r.f; }
+    } else { rowHeights[i]={hpt:6}; }
+  });
+  ws["!rows"]=rowHeights;
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Pricing & CAC");
+  return wb;
+}
+
+  function anchorSave(filename, blob){
+    try{
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function exportStatus(msg, cls){
+    var st = document.getElementById("exportStatus");
+    st.textContent = msg || "";
+    st.className = "export-status" + (cls ? (" "+cls) : "");
+  }
+
+  function exportXlsx(){
+    if(typeof XLSX === "undefined" || !XLSX.utils){
+      exportStatus("Excel tool didn't load — reload the page.", "err"); return;
+    }
+    if(!last || !last.valid){
+      exportStatus("Enter your numbers first.", "err"); return;
+    }
+    var blob;
+    try{
+      var wb = buildPricingWorkbook(XLSX, last);
+      var arr = XLSX.write(wb, {bookType:"xlsx", type:"array"});
+      blob = new Blob([arr], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    }catch(e){ exportStatus("Couldn't build the file.", "err"); return; }
+    var filename = "UMBP-price-builder-" + last.cur + ".xlsx";
+
+    if(window.claude && typeof window.claude.use === "function"){
+      // Published claude.ai page: hand the file to the viewer via the downloads capability.
+      exportStatus("Preparing\u2026");
+      window.claude.use("downloads").then(function(dl){
+        if(!dl || typeof dl.save !== "function"){ exportStatus("Saving isn't available in this view.", "err"); return; }
+        dl.save({ filename:filename, data:blob }).then(function(){
+          exportStatus("Saved \u2713", "ok");
+        }).catch(function(err){
+          var code = err && err.code;
+          if(code === "declined"){ exportStatus(""); }
+          else if(code === "rate_limited"){ exportStatus("A prompt is already open \u2014 try again.", "err"); }
+          else { exportStatus("Couldn't save (" + (code || "error") + ").", "err"); }
+        });
+      }).catch(function(){ exportStatus("Saving isn't available here.", "err"); });
+    } else {
+      // Opened as a local file / other runtime: normal browser download.
+      if(anchorSave(filename, blob)) exportStatus("Downloaded \u2713", "ok");
+      else exportStatus("Couldn't download.", "err");
+    }
+  }
+
+  // ---- init ----
+  document.getElementById("btnExport").addEventListener("click", exportXlsx);
+  applyVarMode();
+  paintCurrency();
+  calc();
+})();
+</script>
+</body>
+</html>

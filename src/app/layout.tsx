@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
+import { SiteHeader } from "@/components/hub/SiteHeader";
+import { SiteFooter } from "@/components/hub/SiteFooter";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -15,9 +17,12 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "UMBP Canvas Lab — Business Model Canvas & Feasibility Audit",
+  title: {
+    default: "Ivory Center Business Hub",
+    template: "%s · Ivory Center Business Hub",
+  },
   description:
-    "Interactive Business Model Canvas with a live feasibility score and an AI business-model diagnostic, built for the Utah Moldova Business Partnership.",
+    "Interactive business tools from Ivory Center and the Utah-Moldova Business Partnership: Business Model Canvas, Price Builder, UVP & Copy Workbench, and curated resources.",
 };
 
 /** Applies the saved theme before first paint so dark mode doesn't flash. */
@@ -35,7 +40,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        <SiteHeader />
+        {children}
+        <SiteFooter />
+      </body>
     </html>
   );
 }
