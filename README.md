@@ -1,7 +1,15 @@
-# UMBP Canvas Lab
+# Ivory Center Business Hub
 
-Interactive Business Model Canvas with a live feasibility score and an AI business-model
-diagnostic for early-stage entrepreneurs, built for the Utah Moldova Business Partnership.
+A central website for Ivory Center and the Utah-Moldova Business Partnership, bringing its
+interactive business tools together under one dashboard.
+
+| Page | What it does |
+|---|---|
+| **Dashboard** (`/`) | Welcome, an overview of every tool, and quick links |
+| **Canvas Lab** (`/canvas`) | Business Model Canvas with a live feasibility score, AI diagnostic, PNG and Markdown export |
+| **Price Builder** (`/price-builder`) | Price from fulfilment cost, customer acquisition cost and target margin; Excel export |
+| **UVP & Copy Workbench** (`/uvp`) | Value propositions, bios, hero copy, hooks and ads in English, Romanian, Russian and Ukrainian; CSV export |
+| **Resources** (`/resources`) | Curated links, edited in `src/lib/resources.ts` |
 
 ## Getting started
 
@@ -14,18 +22,17 @@ npm run dev
 Open http://localhost:3000.
 
 Get a key from [Google AI Studio](https://aistudio.google.com/apikey). It is read server-side
-only. Without it the canvas, feasibility scores, built-in checks, Markdown copy and image
-export all still work — only the AI diagnostic is unavailable.
+only and powers both AI features: the Canvas Lab diagnostic and the UVP workbench's AI
+copywriter. Without it everything else still works. Canvas scores, checks and exports are
+local, the Price Builder needs no AI, and the UVP workbench switches to its offline templates.
 
-## What it does
+Work is saved in each visitor's own browser; nothing is stored on a server.
 
-- Edit the nine canvas blocks, with guided prompts and worked examples in each.
-- A rule-based feasibility audit scores audience fit, pricing viability and differentiation,
-  and updates as you type.
-- **Analyze** sends the canvas to Google Gemini for a block-by-block diagnostic, priority
-  findings, and a scan for inputs your other blocks imply but the canvas doesn't state yet.
-- Export the canvas as a 2400×1700 PNG, or copy the canvas and audit as Markdown.
+## Adding resources or tools
 
-Your canvas is saved in your own browser; nothing is stored on a server.
+- **Links:** add entries to `RESOURCES` in `src/lib/resources.ts`.
+- **A new tool:** add it to `TOOLS` in `src/lib/tools.ts`. A standalone HTML tool goes in
+  `public/tools/` and gets a page like `src/app/price-builder/page.tsx`.
 
-`npm test` runs the retry-policy tests. See `CLAUDE.md` for architecture and conventions.
+`npm run build`, `npm run lint` and `npm test` should pass before deploying. See `CLAUDE.md`
+for architecture and conventions.

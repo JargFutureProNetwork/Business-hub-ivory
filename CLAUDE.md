@@ -1,4 +1,47 @@
-# UMBP Canvas Lab (Next.js)
+# Ivory Center Business Hub (Next.js)
+
+One site that gathers Ivory Center's business tools: a dashboard (`/`), Canvas Lab (`/canvas`),
+Price Builder (`/price-builder`), UVP & Copy Workbench (`/uvp`) and Resources (`/resources`).
+It grew out of the Canvas Lab app below, which is still the bulk of the code.
+
+## Hub structure
+
+| Path | What it holds |
+|---|---|
+| `src/lib/tools.ts` | `TOOLS`: name, route, copy, icon and kind of every tool. The dashboard cards, header nav and footer all read it, so a new tool is added here once |
+| `src/lib/resources.ts` | `RESOURCES`: the links on the Resources page (`title`, `url`, optional `description`, `category`). Empty until links are supplied |
+| `src/components/hub/SiteHeader.tsx` | Sticky header: logo, nav (collapses to a menu under `lg`), and the site-wide theme toggle |
+| `src/components/hub/ToolFrame.tsx` | Shows an embedded tool in a same-origin iframe sized to the viewport, with an "Open full screen" link |
+| `src/app/page.tsx` | Dashboard |
+| `src/app/canvas/` | Canvas Lab (the original app page, moved from `src/app/page.tsx`) |
+| `src/app/price-builder`, `src/app/uvp` | Thin pages that render `ToolFrame` |
+| `src/app/api/sample` | Gemini stand-in for claude.ai's `sample` capability, used by the UVP workbench |
+| `public/tools/*.html` | The Price Builder and UVP & Copy Workbench, the original standalone apps |
+| `public/tools/hub-bridge.js` | Provides `window.claude.use("sample" \| "downloads")` to those apps, flags them as embedded, and exposes the hub theme |
+| `public/tools/vendor/` | Local copies of the libraries the apps used to load from CDNs (React 18.3.1, ReactDOM, Babel standalone 7.24.7, xlsx-js-style 1.2.0) plus the UVP workbench's precompiled Tailwind v3 CSS |
+
+### Embedded tools
+
+The Price Builder and the UVP workbench were claude.ai artifacts. They run unchanged in an iframe;
+the changes made to them are deliberately small and marked with comments:
+
+- `hub-bridge.js` loads first. Where the artifacts call `window.claude.use(...)`, it answers:
+  `"downloads"` saves through a normal `<a download>`; `"sample"` checks `GET /api/sample` and,
+  if a key is configured, sends the workbench's own prompt to `POST /api/sample`. With no key it
+  rejects with `unavailable`, and the workbench starts in its built-in offline template mode.
+- Inside the hub (`html.hub-embedded`) each tool hides its own masthead / theme toggle, since the
+  hub header carries them. Opened directly (`/tools/*.html`) they look as they always did.
+- UVP's colour tokens were remapped to the Ivory palette (token names kept), fonts switched to
+  Fraunces/Manrope, and its theme follows the hub toggle via `window.hubTheme`.
+- CDN `<script>` tags point at `public/tools/vendor/`. The workbench's Tailwind is precompiled;
+  after changing its classes rebuild it with
+  `npx tailwindcss@3.4.17 --content public/tools/uvp-workbench.html -o public/tools/vendor/uvp-tailwind.css --minify`.
+- `/api/sample` takes a client-built prompt, so it is capped at 16 000 characters. If the site
+  is public, consider rate limiting it at the host.
+
+`next start` only serves files that were in `public/` when it started; restart it after adding one.
+
+# Canvas Lab
 
 Business Model Canvas editor with a rule-based feasibility audit and an AI business-model
 diagnostic, for the Utah Moldova Business Partnership. This is the Next.js port of the
@@ -43,7 +86,7 @@ export are all local, and the AI panel shows a `missing_api_key` message.
 | `src/app/api/analyze/diagnostic` `.../gaps` | The two passes the UI calls |
 | `src/app/api/analyze` | Combined one-call endpoint: `{ feasibility, suggestions, alerts, detail }`. Not used by the UI |
 | `src/components/` | `primitives` (Meter, Bar, DiagnosticBody), `cards` (BlockCard, FlagItem, FindingCard, GapCard), `EditorModal`, `ImageModal`, `Report` |
-| `src/app/page.tsx` | `App`: state, localStorage persistence, `runAnalysis`, `askAI` |
+| `src/app/canvas/page.tsx` | `App`: state, localStorage persistence, `runAnalysis`, `askAI` |
 | `src/app/globals.css` | Brand tokens, dark mode, `.bmc-frame` / `.bmc-grid` |
 
 Block keys: `kp` Key Partners, `ka` Key Activities, `kr` Key Resources, `vp` Value Propositions,
@@ -125,7 +168,9 @@ left alone.
   not during render, so the server and client markup agree. `<html>` carries
   `suppressHydrationWarning` because the pre-paint theme script in `layout.tsx` sets
   `data-theme` before React hydrates.
-- The PNG export lifts its icon artwork from the hidden `#icon-src` node `page.tsx` renders.
+- The PNG export lifts its icon artwork from the hidden `#icon-src` node `canvas/page.tsx` renders.
+- The theme toggle moved from the Canvas Lab header to the hub header (`SiteHeader`); it still
+  saves to `umbp-theme`.
 - Unlike the artifact, `<a download>` works here, so `ImageModal` offers a real download and
   keeps the on-screen image only as a fallback.
 - The artifact's Claude-specific plumbing is gone: no `window.claude`, no `sample` capability,

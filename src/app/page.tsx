@@ -1,615 +1,160 @@
-"use client";
-
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import {
-  Copy,
-  Gauge,
-  ImageDown,
-  Info,
-  Loader2,
-  Moon,
-  RotateCcw,
-  Sun,
-  Check,
-} from "lucide-react";
-import {
-  BLOCKS,
-  BLOCK_BY_KEY,
-  EMPTY,
-  EXAMPLES,
-  type BlockKey,
-  type Canvas,
-  type Meta,
-} from "@/lib/blocks";
-import { MDL_PER_EUR, TONE, analyze, statusOf, uniq, type Flag } from "@/lib/audit";
-import { PRIORITY, type AiResult, type Gap } from "@/lib/ai-types";
-import { buildMarkdown } from "@/lib/markdown";
-import { renderCanvasPNG } from "@/lib/canvas-image";
-import { isApiError, runDiagnosticPass, runGapPass } from "@/lib/analyze-client";
-import { BlockCard, type Highlight } from "@/components/cards";
-import { EditorModal } from "@/components/EditorModal";
-import { ImageModal } from "@/components/ImageModal";
-import { Report, type AiState, type LastRun, type PassState } from "@/components/Report";
+import Link from "next/link";
+import { ArrowRight, BookOpen, Check } from "lucide-react";
+import { TOOLS } from "@/lib/tools";
+import { RESOURCES } from "@/lib/resources";
+import { SiteFooter } from "@/components/hub/SiteFooter";
 
-const STORAGE_KEY = "umbp-bmc-v1";
+const PATH = [
+  { step: "Model", slug: "canvas", text: "Lay out who you serve, what you offer and how you earn, then check the score." },
+  { step: "Price", slug: "price-builder", text: "Find the price that covers delivery, customer acquisition and the profit you need." },
+  { step: "Message", slug: "uvp", text: "Turn your offer into a value proposition and ready-to-post marketing copy." },
+];
 
-type Saved = {
-  name?: string;
-  meta?: Meta;
-  canvas?: Canvas;
-  showReport?: boolean;
-  ai?: AiResult;
-  aiAt?: number | null;
-  aiKey?: string;
-  lastRun?: LastRun | null;
-  dismissed?: string[];
-  addedIds?: string[];
-};
-
-function load(): Saved | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as Saved;
-  } catch {
-    /* a corrupt or blocked store just means we start fresh */
-  }
-  return null;
-}
-
-export default function App() {
-  // Read localStorage after mount so the server and first client render match.
-  const [hydrated, setHydrated] = useState(false);
-  const [name, setName] = useState(EXAMPLES.investing.name);
-  const [canvas, setCanvas] = useState<Canvas>(EXAMPLES.investing.canvas);
-  const [meta, setMeta] = useState<Meta>({ by: "", date: "", version: "1" });
-  const [openKey, setOpenKey] = useState<BlockKey | null>(null);
-  const [showReport, setShowReport] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [toast, setToast] = useState("");
-  const [imgUrl, setImgUrl] = useState("");
-  const [imgBusy, setImgBusy] = useState(false);
-  const [ai, setAi] = useState<AiResult | null>(null);
-  const [aiState, setAiState] = useState<AiState>("idle");
-  const [aiAt, setAiAt] = useState<number | null>(null);
-  const [aiSteps, setAiSteps] = useState<Partial<Record<"diag" | "gaps", PassState>>>({});
-  const [aiError, setAiError] = useState("");
-  const [dismissed, setDismissed] = useState<string[]>([]);
-  const [addedIds, setAddedIds] = useState<string[]>([]);
-  const [aiKey, setAiKey] = useState("");
-  const [lastRun, setLastRun] = useState<LastRun | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-
-  // Restoring the saved canvas has to happen after mount: reading localStorage
-  // during render would make the server and client markup disagree. One
-  // mount-time restore is exactly the cascading render this rule guards against,
-  // so it is suppressed here rather than worked around.
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    const saved = load();
-    if (saved) {
-      if (saved.name != null) setName(saved.name);
-      if (saved.canvas) setCanvas(saved.canvas);
-      if (saved.meta) setMeta(saved.meta);
-      if (saved.showReport) setShowReport(true);
-      // A stored result from an older shape is discarded rather than rendered.
-      if (saved.ai?.v === 4) setAi(saved.ai);
-      setAiAt(saved.aiAt ?? null);
-      setAiKey(saved.aiKey ?? "");
-      setLastRun(saved.lastRun ?? null);
-      setDismissed(saved.dismissed ?? []);
-      setAddedIds(saved.addedIds ?? []);
-    }
-    setMeta((m) =>
-      m.date ? m : { ...m, date: new Date().toLocaleDateString("en-GB").replace(/\//g, ".") },
-    );
-    setTheme(
-      (document.documentElement.getAttribute("data-theme") as "light" | "dark" | null) ??
-        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
-    );
-    setHydrated(true);
-  }, []);
-  /* eslint-enable react-hooks/set-state-in-effect */
-
-  const baseReport = useMemo(() => analyze(canvas), [canvas]);
-
-  // AI findings; item-specific ones disappear once the user edits or removes that input
-  const findings = useMemo(
-    () =>
-      (ai?.findings || [])
-        .filter((f) => !f.item || (f.itemBlock ? (canvas[f.itemBlock] || []).includes(f.item) : true))
-        .sort((a, b) => PRIORITY[a.priority].rank - PRIORITY[b.priority].rank),
-    [ai, canvas],
-  );
-
-  const report = useMemo(() => {
-    const penalty = Math.min(30, findings.reduce((a, f) => a + PRIORITY[f.priority].penalty, 0));
-    return { ...baseReport, overall: Math.max(5, baseReport.overall - penalty), fitPenalty: penalty };
-  }, [baseReport, findings]);
-
-  const aiFlagsFor = (key: BlockKey): Flag[] =>
-    findings
-      .filter((f) => f.blocks.includes(key) || f.itemBlock === key)
-      .map((f) => ({
-        pillar: "ai",
-        severity: PRIORITY[f.priority].severity,
-        label: f.clarify ? `${PRIORITY[f.priority].label}: clarification needed` : PRIORITY[f.priority].label,
-        block: key,
-        title: f.title,
-        detail: `${f.observation}${f.whyItMatters ? ` Why it matters: ${f.whyItMatters}` : ""}${f.recommendation ? ` Recommendation: ${f.recommendation}` : ""}`,
-      }));
-
-  const highlightsFor = (key: BlockKey): Highlight[] =>
-    findings.filter((f) => f.item && f.itemBlock === key).map((f) => ({ item: f.item, priority: f.priority }));
-
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ name, meta, canvas, showReport, ai, aiAt, aiKey, lastRun, dismissed, addedIds }),
-      );
-    } catch {
-      /* a full or blocked store shouldn't break editing */
-    }
-  }, [hydrated, name, meta, canvas, showReport, ai, aiAt, aiKey, lastRun, dismissed, addedIds]);
-
-  // Missing-input gaps: hide dismissed ones; a gap counts as added once its draft is in the target block.
-  // Remember added gaps by id so they stay resolved after the user edits the [brackets].
-  const isAdded = (g: Gap) =>
-    addedIds.includes(g.id) || (!!g.draft && (canvas[g.target] || []).some((x) => x.trim() === g.draft));
-  const markAdded = (g: Gap) => setAddedIds((a) => uniq([...a, g.id]));
-
-  const gaps = useMemo(
-    () =>
-      (ai?.gaps || [])
-        .filter((g) => !dismissed.includes(g.id))
-        .sort((a, b) => PRIORITY[a.severity].rank - PRIORITY[b.severity].rank),
-    [ai, dismissed],
-  );
-  const openGapsFor = (key: BlockKey) => gaps.filter((g) => g.target === key && !isAdded(g));
-
-  const addGap = (g: Gap) => {
-    if (!g.draft || isAdded(g)) return;
-    setCanvas((c) => ({ ...c, [g.target]: [...(c[g.target] || []).filter((x) => x.trim()), g.draft] }));
-    markAdded(g);
-    setToast(`Added to ${BLOCK_BY_KEY[g.target].title}. Replace the [brackets] with your details.`);
-  };
-  const dismissGap = (g: Gap) => setDismissed((d) => uniq([...d, g.id]));
-
-  useEffect(() => {
-    if (!hydrated) return;
-    document.documentElement.setAttribute("data-theme", theme);
-    try {
-      localStorage.setItem("umbp-theme", theme);
-    } catch {
-      /* ignore */
-    }
-  }, [hydrated, theme]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(""), 2600);
-    return () => clearTimeout(t);
-  }, [toast]);
-
-  const currentKey = JSON.stringify({ name, canvas });
-  const stale = !!ai && aiKey !== currentKey;
-  const changedSinceRun = !!lastRun && lastRun.key !== currentKey;
-
-  const askAI = useCallback(
-    async (prevCanvasArg?: Canvas | null) => {
-      const prevCanvas = prevCanvasArg === undefined ? (lastRun?.prevCanvas as Canvas | null) : prevCanvasArg;
-      const keyAtCall = JSON.stringify({ name, canvas });
-
-      abortRef.current?.abort();
-      const ctrl = new AbortController();
-      abortRef.current = ctrl;
-      setAiState("loading");
-      setAiError("");
-      setAiSteps({ diag: "loading", gaps: "loading" });
-
-      const body = {
-        name,
-        canvas,
-        prevCanvas: prevCanvas ?? null,
-        known: baseReport.flags.map((f) => `${f.title} (${BLOCK_BY_KEY[f.block].title})`),
-      };
-
-      const runA = runDiagnosticPass(body, ctrl.signal).then(
-        (r) => {
-          setAiSteps((st) => ({ ...st, diag: "done" }));
-          return r;
-        },
-        (e) => {
-          setAiSteps((st) => ({ ...st, diag: "error" }));
-          throw e;
-        },
-      );
-      const runB = runGapPass(body, ctrl.signal).then(
-        (r) => {
-          setAiSteps((st) => ({ ...st, gaps: "done" }));
-          return r;
-        },
-        (e) => {
-          setAiSteps((st) => ({ ...st, gaps: "error" }));
-          throw e;
-        },
-      );
-
-      const [ra, rb] = await Promise.allSettled([runA, runB]);
-      if (abortRef.current !== ctrl) return; // superseded by a newer analysis
-      if (ctrl.signal.aborted) {
-        setAiState("idle");
-        return;
-      }
-
-      if (ra.status === "rejected" && rb.status === "rejected") {
-        const reason = ra.reason;
-        setAiError(
-          isApiError(reason)
-            ? reason.error
-            : "The analysis didn’t finish. The scores and built-in checks are still up to date.",
-        );
-        setAiState("error");
-        return;
-      }
-
-      // Keep whatever succeeded; carry the previous result forward for a pass that failed
-      const next: AiResult = {
-        v: 4,
-        ...(ra.status === "fulfilled"
-          ? ra.value
-          : {
-              blocks: ai?.blocks ?? {},
-              understanding: ai?.understanding ?? "",
-              summary: ai?.summary ?? "",
-              changeNote: "",
-              findings: ai?.findings ?? [],
-            }),
-        ...(rb.status === "fulfilled"
-          ? rb.value
-          : { gaps: ai?.gaps ?? [], costQuestion: ai?.costQuestion ?? "" }),
-        partial: ra.status === "rejected" ? "diag" : rb.status === "rejected" ? "gaps" : "",
-      };
-
-      setAi(next);
-      setAiState("done");
-      setAiAt(Date.now());
-      setAiKey(keyAtCall);
-      setDismissed([]);
-      setAddedIds([]);
-
-      const nGaps = next.gaps.length,
-        nF = next.findings.length;
-      setToast(
-        next.partial
-          ? "Analysis partly updated. One pass didn’t finish; click Analyze to retry."
-          : `Analysis updated: ${nF} ${nF === 1 ? "finding" : "findings"}, ${nGaps} possible missing ${nGaps === 1 ? "input" : "inputs"}`,
-      );
-    },
-    [ai, baseReport.flags, canvas, lastRun, name],
-  );
-
-  const runAnalysis = () => {
-    const prev = lastRun;
-    setLastRun({
-      key: currentKey,
-      canvas,
-      overall: report.overall,
-      prevOverall: prev ? prev.overall : null,
-      prevCanvas: prev ? prev.canvas : null,
-    });
-    setShowReport(true);
-    if (report.filled >= 2) askAI(prev ? (prev.canvas as Canvas) : null);
-    else setToast("Fill in at least two blocks so the AI has enough context to analyze.");
-    setTimeout(
-      () =>
-        document.getElementById("report")?.scrollIntoView({
-          behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-          block: "start",
-        }),
-      60,
-    );
-  };
-
-  const resetAi = () => {
-    setAi(null);
-    setAiKey("");
-    setAiAt(null);
-    setLastRun(null);
-    setDismissed([]);
-    setAddedIds([]);
-  };
-
-  const loadExample = (key: string) => {
-    const ex = EXAMPLES[key];
-    setName(ex.name);
-    setCanvas(ex.canvas);
-    resetAi();
-    setToast(`Loaded example: ${ex.name}`);
-  };
-
-  const clearAll = () => {
-    setName("Untitled business");
-    setCanvas(EMPTY);
-    setShowReport(false);
-    resetAi();
-    setToast("Canvas cleared");
-  };
-
-  const saveImage = async () => {
-    setImgBusy(true);
-    try {
-      setImgUrl(await renderCanvasPNG(name, meta, canvas));
-    } catch {
-      setToast("The image couldn’t be created. Try again.");
-    }
-    setImgBusy(false);
-  };
-
-  const copyImage = async () => {
-    try {
-      const blob = await (await fetch(imgUrl)).blob();
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-      setToast("Canvas image copied");
-    } catch {
-      setToast("Copying isn’t allowed here. Use Download image, or press and hold it.");
-    }
-  };
-
-  const copyReport = async () => {
-    const text = buildMarkdown(name, canvas, showReport ? report : null, ai, meta);
-    try {
-      await navigator.clipboard.writeText(text);
-      setToast("Copied canvas and audit as Markdown");
-    } catch {
-      setToast("Copy isn’t available in this view. Select the text manually.");
-    }
-  };
-
-  const openBlock = openKey ? BLOCK_BY_KEY[openKey] : null;
-  const liveTone = TONE[statusOf(report.overall)];
-  const imgName = `${(name || "business-model-canvas").replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() || "canvas"}.png`;
+export default function Dashboard() {
+  const byslug = Object.fromEntries(TOOLS.map((t) => [t.slug, t]));
 
   return (
-    <div className="min-h-screen">
-      {/* Brand band: the logo on paper, over a red rule. */}
-      <header className="bg-surface border-b border-line">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-          <div className="mr-auto flex items-center gap-3 min-w-0">
+    <>
+      <main>
+        {/* Welcome */}
+        <section className="bg-surface border-b border-line">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-10 sm:py-14 grid gap-8 md:grid-cols-[1fr_auto] items-center">
+            <div className="max-w-2xl">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">
+                Ivory Center · Utah-Moldova Business Partnership
+              </p>
+              <h1 className="mt-3 font-display font-bold text-3xl sm:text-5xl leading-[1.08] text-balance">
+                Welcome to the Business Hub
+              </h1>
+              <p className="mt-4 text-base sm:text-lg text-muted leading-relaxed text-pretty">
+                Practical tools for entrepreneurs, in one place. Test your business model, set a price
+                that pays, and write marketing copy your customers will read. Everything runs in your
+                browser and your work is saved on your own device.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  href="/canvas"
+                  className="inline-flex items-center gap-2 rounded-lg bg-brand text-brandink px-4 py-2.5 text-sm font-bold hover:opacity-90"
+                >
+                  Start with Canvas Lab <ArrowRight size={16} />
+                </Link>
+                <a
+                  href="#tools"
+                  className="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm font-bold hover:bg-surface2"
+                >
+                  Browse all tools
+                </a>
+              </div>
+            </div>
             <Image
-              src="/logo-umbp.png"
-              alt="Ivory Center / Utah-Moldova Business Partnership"
-              width={859}
-              height={54}
+              src="/icon.png"
+              alt=""
+              width={512}
+              height={512}
               priority
-              className="logo-light h-7 sm:h-8 w-auto"
+              className="hidden md:block h-44 w-44 lg:h-52 lg:w-52"
             />
-            <Image
-              src="/logo-umbp-dark.png"
-              alt="Ivory Center / Utah-Moldova Business Partnership"
-              width={859}
-              height={54}
-              priority
-              className="logo-dark h-7 sm:h-8 w-auto"
-            />
-            <span className="hidden lg:block h-7 w-px bg-line" aria-hidden="true" />
-            <p className="hidden lg:block font-display font-bold text-lg leading-none">Canvas Lab</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span
-              className="hidden sm:inline-flex items-center gap-2 rounded-full bg-surface2 px-3 py-1.5 text-xs font-semibold"
-              title="Updates as you edit"
-            >
-              <span className="h-2 w-2 rounded-full" style={{ background: liveTone.stroke }} />
-              Live score {report.overall}%
-            </span>
-            <button
-              onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
-              className="p-2 rounded-lg hover:bg-surface2"
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
+        </section>
+
+        {/* Tools */}
+        <section id="tools" className="max-w-[1200px] mx-auto px-4 sm:px-6 py-10 sm:py-12 scroll-mt-20">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <h2 className="font-display font-bold text-2xl sm:text-3xl">Tools</h2>
+            <p className="text-sm text-muted">{TOOLS.length} tools available</p>
           </div>
-        </div>
-        <div className="h-1 bg-brand" aria-hidden="true" />
-      </header>
-
-      <main className="max-w-[1400px] mx-auto px-4 sm:px-6 pb-16">
-        {/* Actions */}
-        <div className="pt-5 flex flex-wrap items-center justify-end gap-2">
-          <select
-            onChange={(e) => {
-              if (e.target.value) loadExample(e.target.value);
-              e.target.value = "";
-            }}
-            defaultValue=""
-            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold"
-            aria-label="Load an example canvas"
-          >
-            <option value="" disabled>
-              Load example…
-            </option>
-            <option value="investing">Investing app (weak fit)</option>
-            <option value="bakery">Office bakery (strong fit)</option>
-          </select>
-          <button
-            onClick={clearAll}
-            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold inline-flex items-center gap-1.5"
-          >
-            <RotateCcw size={15} /> Clear
-          </button>
-          <button
-            onClick={saveImage}
-            disabled={imgBusy}
-            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold inline-flex items-center gap-1.5 disabled:opacity-60"
-          >
-            {imgBusy ? <Loader2 size={15} className="animate-spin" /> : <ImageDown size={15} />} Save canvas as image
-          </button>
-          <button
-            onClick={runAnalysis}
-            disabled={aiState === "loading"}
-            className="relative rounded-lg bg-brand text-brandink px-4 py-2 text-sm font-bold inline-flex items-center gap-2 shadow-sm disabled:opacity-70"
-          >
-            {aiState === "loading" ? <Loader2 size={16} className="animate-spin" /> : <Gauge size={16} />}
-            {aiState === "loading"
-              ? "Analyzing…"
-              : changedSinceRun
-                ? "Re-analyze with my changes"
-                : "Analyze business feasibility"}
-            {changedSinceRun && aiState !== "loading" && (
-              <span
-                className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-ink border-2 border-[var(--bg)]"
-                aria-hidden="true"
-              />
-            )}
-          </button>
-        </div>
-
-        {/* Sheet header, as on the printed canvas */}
-        <div className="pt-5 pb-4 flex flex-col xl:flex-row xl:items-end gap-4">
-          <h1 className="font-display text-3xl sm:text-[2.4rem] font-bold leading-none tracking-tight shrink-0">
-            The Business Model Canvas
-          </h1>
-          <div className="flex-1 grid grid-cols-2 md:grid-cols-[2fr_2fr_1fr_1fr] gap-2">
-            <div className="meta-field col-span-2 md:col-span-1">
-              <label htmlFor="bizname">Designed for</label>
-              <input id="bizname" value={name} onChange={(e) => setName(e.target.value)} placeholder="Business name" />
-            </div>
-            <div className="meta-field col-span-2 md:col-span-1">
-              <label htmlFor="designer">Designed by</label>
-              <input
-                id="designer"
-                value={meta.by}
-                onChange={(e) => setMeta((m) => ({ ...m, by: e.target.value }))}
-                placeholder="Your name or team"
-              />
-            </div>
-            <div className="meta-field">
-              <label htmlFor="mdate">Date</label>
-              <input
-                id="mdate"
-                value={meta.date}
-                onChange={(e) => setMeta((m) => ({ ...m, date: e.target.value }))}
-                placeholder="dd.mm.yyyy"
-              />
-            </div>
-            <div className="meta-field">
-              <label htmlFor="mversion">Version</label>
-              <input
-                id="mversion"
-                value={meta.version}
-                onChange={(e) => setMeta((m) => ({ ...m, version: e.target.value }))}
-                placeholder="1"
-              />
-            </div>
+          <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {TOOLS.map((t) => {
+              const I = t.icon;
+              return (
+                <Link
+                  key={t.slug}
+                  href={t.href}
+                  className="group flex flex-col rounded-xl border border-line bg-surface p-5 sm:p-6 transition hover:border-brand hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="grid place-items-center h-11 w-11 rounded-lg bg-goldsoft text-brand">
+                      <I size={22} />
+                    </span>
+                    <span className="rounded-full bg-surface2 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-muted">
+                      {t.category}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 font-display font-bold text-xl">{t.name}</h3>
+                  <p className="mt-1 text-sm font-semibold">{t.tagline}</p>
+                  <p className="mt-2 text-sm text-muted leading-relaxed">{t.description}</p>
+                  <ul className="mt-4 space-y-1.5 text-sm">
+                    {t.features.map((f) => (
+                      <li key={f} className="flex gap-2">
+                        <Check size={15} className="mt-0.5 shrink-0 text-brand" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="mt-auto pt-5 inline-flex items-center gap-1.5 text-sm font-bold text-brand">
+                    Open {t.short}
+                    <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </Link>
+              );
+            })}
           </div>
-        </div>
+        </section>
 
-        {/* Canvas */}
-        <div className="bmc-frame">
-          <div className="bmc-grid">
-            {BLOCKS.map((b) => (
-              <BlockCard
-                key={b.key}
-                block={b}
-                items={(canvas[b.key] || []).filter((s) => s.trim())}
-                flags={[...aiFlagsFor(b.key), ...report.flags.filter((f) => f.block === b.key)]}
-                highlights={highlightsFor(b.key)}
-                diag={ai?.blocks?.[b.key]}
-                stale={stale}
-                gapCount={openGapsFor(b.key).length}
-                onOpen={() => setOpenKey(b.key)}
-              />
-            ))}
-          </div>
-        </div>
-        <p className="text-xs text-muted mt-3 flex items-center gap-1.5">
-          <Info size={13} /> Click any block to edit. Your canvas saves automatically in this browser.
-        </p>
-
-        {showReport && (
-          <>
-            <Report
-              report={report}
-              onOpenBlock={setOpenKey}
-              ai={ai}
-              aiState={aiState}
-              aiAt={aiAt}
-              aiSteps={aiSteps}
-              aiError={aiError}
-              stale={stale}
-              lastRun={lastRun}
-              findings={findings}
-              gaps={gaps}
-              isAdded={isAdded}
-              onAddGap={addGap}
-              onDismissGap={dismissGap}
-              onRetry={() => askAI()}
-              onStop={() => abortRef.current?.abort()}
-            />
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                onClick={copyReport}
-                className="rounded-lg bg-navy text-navyink px-4 py-2 text-sm font-bold inline-flex items-center gap-2"
-              >
-                <Copy size={15} /> Copy as Markdown
-              </button>
-            </div>
-            <p className="text-xs text-muted mt-3 max-w-3xl leading-relaxed">
-              Scores come from rule-based checks of what’s written on the canvas; they flag gaps to investigate, not a
-              verdict on the business. MDL prices are converted at about {MDL_PER_EUR} MDL per euro for comparison.
+        {/* Suggested path */}
+        <section className="border-y border-line bg-surface">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-10 sm:py-12">
+            <h2 className="font-display font-bold text-2xl sm:text-3xl">How the tools fit together</h2>
+            <p className="mt-2 text-sm text-muted max-w-2xl">
+              Each tool works on its own. Used in this order, each one feeds the next.
             </p>
-          </>
-        )}
-      </main>
+            <ol className="mt-6 grid gap-4 md:grid-cols-3">
+              {PATH.map((p, i) => {
+                const t = byslug[p.slug];
+                return (
+                  <li key={p.slug} className="relative rounded-xl border border-line bg-bg p-5">
+                    <div className="flex items-center gap-3">
+                      <span className="grid place-items-center h-8 w-8 rounded-full bg-navy text-navyink text-sm font-bold">
+                        {i + 1}
+                      </span>
+                      <span className="font-display font-bold text-lg">{p.step}</span>
+                    </div>
+                    <p className="mt-3 text-sm text-muted leading-relaxed">{p.text}</p>
+                    <Link href={t.href} className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-brand hover:underline">
+                      {t.name} <ArrowRight size={14} />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </section>
 
-      {openBlock && openKey && (
-        <EditorModal
-          key={openKey}
-          block={openBlock}
-          items={(canvas[openKey] || []).filter((s) => s.trim())}
-          flags={[...aiFlagsFor(openKey), ...report.flags.filter((f) => f.block === openKey)]}
-          diag={ai?.blocks?.[openKey]}
-          stale={stale}
-          gaps={gaps.filter((g) => g.target === openKey)}
-          onDismissGap={dismissGap}
-          onMarkAdded={markAdded}
-          addedIds={addedIds}
-          onChange={(list) => setCanvas((c) => ({ ...c, [openKey]: list }))}
-          onClose={() => setOpenKey(null)}
-        />
-      )}
-
-      {imgUrl && (
-        <ImageModal url={imgUrl} filename={imgName} onCopy={copyImage} onClose={() => setImgUrl("")} />
-      )}
-
-      {/* Source of the Lucide artwork the PNG export draws into the image. */}
-      <div id="icon-src" style={{ display: "none" }} aria-hidden="true">
-        {BLOCKS.map((b) => {
-          const I = b.icon;
-          return (
-            <span key={b.key} data-key={b.key}>
-              <I size={40} strokeWidth={2.2} />
+        {/* Resources teaser */}
+        <section className="max-w-[1200px] mx-auto px-4 sm:px-6 py-10 sm:py-12">
+          <Link
+            href="/resources"
+            className="group flex flex-col sm:flex-row sm:items-center gap-4 rounded-xl bg-navy text-navyink p-6 sm:p-8"
+          >
+            <span className="grid place-items-center h-12 w-12 rounded-lg bg-brand text-brandink shrink-0">
+              <BookOpen size={22} />
             </span>
-          );
-        })}
-      </div>
-
-      {toast && (
-        <div
-          role="status"
-          className="fixed left-1/2 -translate-x-1/2 z-[60] rounded-full bg-navy text-navyink px-4 py-2 text-sm font-semibold shadow-lg"
-          style={{ bottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}
-        >
-          <span className="inline-flex items-center gap-2">
-            <Check size={15} /> {toast}
-          </span>
-        </div>
-      )}
-    </div>
+            <div className="mr-auto">
+              <h2 className="font-display font-bold text-xl sm:text-2xl">Resources</h2>
+              <p className="mt-1 text-sm opacity-80">
+                {RESOURCES.length
+                  ? `${RESOURCES.length} curated links for Moldovan entrepreneurs: guides, programs and reference material.`
+                  : "Curated links for Moldovan entrepreneurs: guides, programs and reference material."}
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1.5 text-sm font-bold">
+              View resources <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </Link>
+        </section>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

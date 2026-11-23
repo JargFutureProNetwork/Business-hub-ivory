@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Third-party libraries copied verbatim for the embedded tools.
+    "public/tools/vendor/**",
   ]),
 ]);
 
