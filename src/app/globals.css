@@ -1,0 +1,272 @@
+@import "tailwindcss";
+
+/* Ivory Center / Utah-Moldova Business Partnership brand: red #C10926, black,
+   white. Green and amber survive only in the three-state scorecard, where a
+   red/black/white palette alone could not tell "strong" from "at risk". */
+:root {
+  --bg: #f6f6f7;
+  --surface: #ffffff;
+  --surface2: #ededf0;
+  --ink: #000000;
+  --muted: #56565c;
+  --line: #d9d9de;
+
+  /* Solid UI: black on white. */
+  --navy: #000000;
+  --navy-ink: #ffffff;
+
+  /* The brand red, for the hero action and every accent. */
+  --brand: #c10926;
+  --brand-ink: #ffffff;
+  --gold: #c10926;
+  --gold-soft: #fce7ea;
+
+  --good: #157a4b;
+  --warn: #9c5a00;
+  --risk: #c10926;
+  --good-soft: #e2f3ea;
+  --warn-soft: #fbeeda;
+  --risk-soft: #fbe3e7;
+}
+
+/* Dark mode stays on-brand: near-black paper, white ink, brightened red so it
+   still carries on a dark surface. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0a0b;
+    --surface: #151517;
+    --surface2: #202024;
+    --ink: #f4f4f5;
+    --muted: #a3a3ac;
+    --line: #2f2f36;
+
+    --navy: #f4f4f5;
+    --navy-ink: #0a0a0b;
+
+    --brand: #e11d3c;
+    --brand-ink: #ffffff;
+    --gold: #ef4059;
+    --gold-soft: #3a1119;
+
+    --good: #3fbf85;
+    --warn: #e0a52c;
+    --risk: #f04a63;
+    --good-soft: #10291d;
+    --warn-soft: #2f2410;
+    --risk-soft: #3a1119;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0a0a0b;
+  --surface: #151517;
+  --surface2: #202024;
+  --ink: #f4f4f5;
+  --muted: #a3a3ac;
+  --line: #2f2f36;
+
+  --navy: #f4f4f5;
+  --navy-ink: #0a0a0b;
+
+  --brand: #e11d3c;
+  --brand-ink: #ffffff;
+  --gold: #ef4059;
+  --gold-soft: #3a1119;
+
+  --good: #3fbf85;
+  --warn: #e0a52c;
+  --risk: #f04a63;
+  --good-soft: #10291d;
+  --warn-soft: #2f2410;
+  --risk-soft: #3a1119;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-navy: var(--navy);
+  --color-navyink: var(--navy-ink);
+  --color-brand: var(--brand);
+  --color-brandink: var(--brand-ink);
+  --color-gold: var(--gold);
+  --color-goldsoft: var(--gold-soft);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-risk: var(--risk);
+  --color-goodsoft: var(--good-soft);
+  --color-warnsoft: var(--warn-soft);
+  --color-risksoft: var(--risk-soft);
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-manrope), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html {
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  margin: 0;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+img {
+  max-width: 100%;
+}
+
+/* Canvas frame: one thick outer border, thin shared inner rules (Strategyzer layout) */
+.bmc-frame {
+  border: 3px solid var(--ink);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--ink);
+}
+
+.bmc-grid {
+  display: grid;
+  gap: 2px;
+  grid-template-columns: 1fr;
+  background: var(--ink);
+}
+
+.bmc-grid > div {
+  background: var(--surface);
+  min-width: 0;
+}
+
+@media (min-width: 700px) and (max-width: 1099px) {
+  .bmc-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .area-vp,
+  .area-cost,
+  .area-rev {
+    grid-column: span 2;
+  }
+}
+
+@media (min-width: 1100px) {
+  .bmc-grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    grid-template-rows: minmax(250px, auto) minmax(250px, auto) minmax(200px, auto);
+    grid-template-areas:
+      "kp kp ka ka vp vp cr cr cs cs"
+      "kp kp kr kr vp vp ch ch cs cs"
+      "cost cost cost cost cost rev rev rev rev rev";
+  }
+  .area-kp { grid-area: kp; }
+  .area-ka { grid-area: ka; }
+  .area-kr { grid-area: kr; }
+  .area-vp { grid-area: vp; }
+  .area-cr { grid-area: cr; }
+  .area-ch { grid-area: ch; }
+  .area-cs { grid-area: cs; }
+  .area-cost { grid-area: cost; }
+  .area-rev { grid-area: rev; }
+}
+
+.block-card {
+  transition: background-color 0.15s;
+}
+
+.block-card:hover {
+  background: var(--surface2);
+}
+
+.area-vp .block-card {
+  box-shadow: inset 0 4px 0 var(--brand);
+}
+
+/* The logo ships as two files: black ink for light mode, white ink for dark.
+   Both keep the brand red, which reads on either background. */
+.logo-dark { display: none; }
+:root[data-theme="dark"] .logo-light { display: none; }
+:root[data-theme="dark"] .logo-dark { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .logo-light { display: none; }
+  :root:not([data-theme="light"]) .logo-dark { display: block; }
+}
+
+.meta-field {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
+.meta-field label {
+  display: block;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.meta-field input {
+  width: 100%;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sheet-enter {
+  animation: sheetIn 0.22s ease-out;
+}
+
+@keyframes sheetIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+.report-enter {
+  animation: reportIn 0.45s ease-out;
+}
+
+@keyframes reportIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-enter,
+  .report-enter {
+    animation: none;
+  }
+  .meter-arc {
+    transition: none !important;
+  }
+}
+
+.meter-arc {
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.2, 0.7, 0.2, 1), stroke 0.3s;
+}
+
+textarea.auto {
+  resize: none;
+  overflow: hidden;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
