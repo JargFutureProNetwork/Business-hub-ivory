@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -8,6 +8,18 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="/tools/hub-bridge.js"></script>
+<script>
+/* Theme: the hub's toggle when embedded, otherwise the saved choice or the OS. */
+(function(){
+  var root = document.documentElement;
+  function set(t){ root.setAttribute("data-theme", t === "dark" ? "dark" : "light"); }
+  var t = window.hubTheme && window.hubTheme.get();
+  if(!t){ try{ t = localStorage.getItem("umbp-theme"); }catch(e){} }
+  if(!t){ t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+  set(t);
+  if(window.hubTheme) window.hubTheme.subscribe(set);
+})();
+</script>
 <style>
   /* Inside the Business Hub the hub header carries the brand, so the tool's
      own masthead and accent rule are hidden. Opened on its own, they show. */
@@ -40,10 +52,20 @@
     padding-top:env(safe-area-inset-top,0px);
     padding-bottom:env(safe-area-inset-bottom,0px);
   }
-  /* Tool is locked to its light brand surface; the guard keeps a dark-mode
-     viewer from repainting it, while body still carries an explicit bg. */
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){ --page:#ECECF0; }
+  /* Dark mode. The script below always sets data-theme on <html>: inside the
+     hub it follows the hub's toggle, on its own the saved choice or the OS.
+     --panel is the dark surface of the formula, price and example blocks; it
+     used to be --ink, which flips to light text in dark mode. */
+  :root{ --panel:#111114; --ok:#1a7f37; }
+  :root[data-theme="dark"]{
+    --red:#E11D3C; --red-bright:#EF4059;
+    --ink:#F4F4F5; --ink-2:#FFFFFF;
+    --gray:#A3A3AC; --gray-mid:#8A8A93; --gray-soft:#9A9AA2;
+    --line:#2F2F36; --surface:#202024; --card:#151517; --page:#0A0A0B;
+    --panel:#1E1E23; --ok:#3FBF85;
+    --c-fulfill:#71717A; --c-profit:#3F3F46;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+    color-scheme:dark;
   }
   *,*::before,*::after{box-sizing:border-box}
   html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
@@ -55,7 +77,7 @@
   .wrap{max-width:1180px;margin:0 auto;padding:0 20px 56px}
 
   /* ---------- Header ---------- */
-  header.masthead{background:var(--ink);color:#fff;padding:22px 0 26px}
+  header.masthead{background:var(--panel);color:#fff;padding:22px 0 26px}
   .masthead-inner{max-width:1180px;margin:0 auto;padding:0 20px;
     display:flex;flex-wrap:wrap;align-items:center;gap:16px;justify-content:space-between}
   .brand{display:flex;align-items:center;gap:12px;min-width:0}
@@ -72,7 +94,7 @@
   .hero{margin:26px 0 22px}
   .hero h1{font-size:clamp(22px,3.4vw,32px);font-weight:800;margin:0 0 6px;letter-spacing:-.4px}
   .hero p.lede{margin:0 0 20px;color:var(--gray);font-size:15px;max-width:720px}
-  .formula{background:var(--ink);border-radius:var(--radius);padding:20px 22px;color:#fff;
+  .formula{background:var(--panel);border-radius:var(--radius);padding:20px 22px;color:#fff;
     display:flex;flex-wrap:wrap;align-items:stretch;gap:12px;box-shadow:var(--shadow)}
   .f-term{flex:1 1 150px;min-width:140px;background:rgba(255,255,255,.05);
     border-radius:var(--radius-sm);padding:12px 14px;border-left:4px solid var(--m)}
@@ -110,7 +132,7 @@
   .export-btn:hover{background:#a50820;border-color:#a50820}
   .export-btn:active{transform:translateY(1px)}
   .export-status{font-size:12px;font-weight:600;color:var(--gray-mid);white-space:nowrap}
-  .export-status.ok{color:#1a7f37}
+  .export-status.ok{color:var(--ok)}
   .export-status.err{color:var(--red)}
 
   /* ---------- Main grid ---------- */
@@ -151,7 +173,7 @@
   .subseg{margin-bottom:14px}
 
   /* ---------- Results ---------- */
-  .result-price{background:var(--ink);color:#fff;border-radius:var(--radius);padding:22px 24px;
+  .result-price{background:var(--panel);color:#fff;border-radius:var(--radius);padding:22px 24px;
     box-shadow:var(--shadow);position:relative;overflow:hidden}
   .result-price::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--red)}
   .result-price .rp-k{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;
@@ -172,7 +194,7 @@
   .tb-head span{font-weight:600;font-size:11.5px;color:rgba(255,255,255,.82);margin-left:auto}
   .tb-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}
   .tb-stat{background:var(--card);padding:16px 18px}
-  .tb-stat.profit{background:var(--ink)}
+  .tb-stat.profit{background:var(--panel)}
   .tb-k{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gray-mid);font-weight:700}
   .tb-stat.profit .tb-k{color:var(--gray-soft)}
   .tb-v{font-size:clamp(22px,3.6vw,30px);font-weight:800;letter-spacing:-.5px;margin-top:4px;
@@ -238,7 +260,7 @@
     text-transform:uppercase;color:var(--red-bright);margin-right:6px}
   .term .ex b{color:var(--ink);font-weight:700}
 
-  .example-strip{background:var(--ink);color:#fff;border-radius:var(--radius);padding:18px 20px;margin-top:4px}
+  .example-strip{background:var(--panel);color:#fff;border-radius:var(--radius);padding:18px 20px;margin-top:4px}
   .example-strip .tag{display:inline-block;background:var(--red);color:#fff;font-size:10px;font-weight:800;
     letter-spacing:1.2px;text-transform:uppercase;padding:5px 11px;border-radius:999px;margin-bottom:10px}
   .example-strip p{margin:0;font-size:14px;line-height:1.65;color:#e8e8ec}
@@ -261,38 +283,38 @@
     <div class="brand">
       <div class="mark">IVORY<span>CENTER</span></div>
       <div class="div"></div>
-      <div class="sub">Utah&ndash;Moldova<br>Business Partnership</div>
+      <div class="sub" data-i18n="sub">Utah&ndash;Moldova<br>Business Partnership</div>
     </div>
-    <div class="pill">Pricing Calculator</div>
+    <div class="pill"><span data-i18n="pill">Pricing Calculator</span></div>
   </div>
 </header>
 
 <div class="wrap">
 
   <div class="hero">
-    <h1>Price Builder</h1>
-    <p class="lede">The price must cover what it costs to <b>deliver</b> the product, what it costs to
+    <h1 data-i18n="title">Price Builder</h1>
+    <p class="lede" data-i18n="lede">The price must cover what it costs to <b>deliver</b> the product, what it costs to
       <b>acquire</b> the customer through ads, and the <b>profit</b> you want to keep. Set your numbers
       below and the recommended price updates instantly.</p>
 
     <div class="formula">
       <div class="f-term" style="--m:var(--c-fulfill)">
-        <div class="k">Fulfillment cost</div>
-        <div class="v">Make / deliver it</div>
+        <div class="k"><span data-i18n="f_fulfill_k">Fulfillment cost</span></div>
+        <div class="v"><span data-i18n="f_fulfill_v">Make / deliver it</span></div>
       </div>
       <div class="f-op">+</div>
       <div class="f-term" style="--m:var(--c-cac)">
-        <div class="k">Acquisition cost (CAC)</div>
-        <div class="v">Win the customer</div>
+        <div class="k"><span data-i18n="f_cac_k">Acquisition cost (CAC)</span></div>
+        <div class="v"><span data-i18n="f_cac_v">Win the customer</span></div>
       </div>
       <div class="f-op">+</div>
       <div class="f-term" style="--m:var(--c-profit)">
-        <div class="k">Profit margin</div>
-        <div class="v">What you keep</div>
+        <div class="k" data-i18n="f_profit_k">Profit margin</div>
+        <div class="v"><span data-i18n="f_profit_v">What you keep</span></div>
       </div>
       <div class="f-op">=</div>
       <div class="f-term price" style="--m:var(--red-bright)">
-        <div class="k">Your price</div>
+        <div class="k"><span data-i18n="f_price_k">Your price</span></div>
         <div class="v" id="formulaPrice">&mdash;</div>
       </div>
     </div>
@@ -301,7 +323,7 @@
   <!-- Controls -->
   <div class="controls">
     <div class="ctrl-group">
-      <span class="lbl">Currency</span>
+      <span class="lbl" data-i18n="lbl_currency">Currency</span>
       <div class="seg" id="currencySeg" role="group" aria-label="Currency">
         <button data-cur="MDL" aria-pressed="true">MDL</button>
         <button data-cur="EUR" aria-pressed="false">€ EUR</button>
@@ -309,19 +331,19 @@
       </div>
     </div>
     <div class="presets">
-      <span class="lbl">Load a worked example</span>
+      <span class="lbl"><span data-i18n="lbl_example">Load a worked example</span></span>
       <div class="preset-btns">
-        <button class="btn" id="exConsulting"><span class="dot"></span>Financial consulting (€)</button>
-        <button class="btn" id="exPhoto"><span class="dot"></span>Photography rental + ads (MDL)</button>
-        <button class="btn ghost" id="exClear">Clear</button>
+        <button class="btn" id="exConsulting"><span class="dot"></span><span data-i18n="ex_consulting">Financial consulting (€)</span></button>
+        <button class="btn" id="exPhoto"><span class="dot"></span><span data-i18n="ex_photo">Photography rental + ads (MDL)</span></button>
+        <button class="btn ghost" id="exClear" data-i18n="ex_clear">Clear</button>
       </div>
     </div>
     <div class="ctrl-group export-group">
-      <span class="lbl">Save your work</span>
+      <span class="lbl"><span data-i18n="lbl_save">Save your work</span></span>
       <div class="export-row">
         <button class="btn export-btn" id="btnExport">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/></svg>
-          Export to Excel
+          <span data-i18n="export">Export to Excel</span>
         </button>
         <span class="export-status" id="exportStatus" aria-live="polite"></span>
       </div>
@@ -336,56 +358,56 @@
       <!-- 1. Fulfillment -->
       <div class="card" style="margin-bottom:18px">
         <div class="card-h fulfill">
-          <div class="num">1</div><h3>Fulfillment costs</h3>
-          <div class="hint">per unit / customer</div>
+          <div class="num">1</div><h3 data-i18n="c1_title">Fulfillment costs</h3>
+          <div class="hint"><span data-i18n="c1_hint">per unit / customer</span></div>
         </div>
         <div class="card-b">
           <div class="subseg">
             <div class="seg" id="varModeSeg" role="group" aria-label="Variable cost entry" style="width:100%">
-              <button data-mode="perunit" aria-pressed="true" style="flex:1">Enter per unit</button>
-              <button data-mode="total" aria-pressed="false" style="flex:1">Enter total / month</button>
+              <button data-mode="perunit" aria-pressed="true" style="flex:1"><span data-i18n="var_perunit">Enter per unit</span></button>
+              <button data-mode="total" aria-pressed="false" style="flex:1"><span data-i18n="var_total">Enter total / month</span></button>
             </div>
           </div>
           <div class="field" id="varPerUnit">
-            <label for="varCost">Variable cost per unit
-              <span class="tip">materials, direct labour,<br>packaging, payment fees</span></label>
+            <label for="varCost"><span data-i18n="varCost_l">Variable cost per unit</span>
+              <span class="tip" data-i18n="varCost_t">materials, direct labour,<br>packaging, payment fees</span></label>
             <div class="inp"><span class="pre cur-pre"></span>
               <input id="varCost" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
-              <span class="suf">/ unit</span></div>
+              <span class="suf" data-i18n="suf_unit">/ unit</span></div>
           </div>
           <div class="field hidden" id="varTotalWrap">
-            <label for="varTotal">Total variable cost / month
-              <span class="tip">all variable costs for a<br>month of sales combined</span></label>
+            <label for="varTotal"><span data-i18n="varTotal_l">Total variable cost / month</span>
+              <span class="tip" data-i18n="varTotal_t">all variable costs for a<br>month of sales combined</span></label>
             <div class="inp"><span class="pre cur-pre"></span>
               <input id="varTotal" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
-              <span class="suf">/ month</span></div>
+              <span class="suf" data-i18n="suf_month">/ month</span></div>
           </div>
           <div class="field">
-            <label for="fixedMonthly">Monthly fixed costs
-              <span class="tip">rent, base salaries,<br>software, insurance</span></label>
+            <label for="fixedMonthly"><span data-i18n="fixed_l">Monthly fixed costs</span>
+              <span class="tip" data-i18n="fixed_t">rent, base salaries,<br>software, insurance</span></label>
             <div class="inp"><span class="pre cur-pre"></span>
               <input id="fixedMonthly" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
-              <span class="suf">/ month</span></div>
+              <span class="suf" data-i18n="suf_month">/ month</span></div>
           </div>
           <div class="field">
-            <label for="units">Expected units sold per month
-              <span class="tip">how many you realistically<br>sell each month</span></label>
+            <label for="units"><span data-i18n="units_l">Expected units sold per month</span>
+              <span class="tip" data-i18n="units_t">how many you realistically<br>sell each month</span></label>
             <div class="inp">
               <input id="units" type="number" min="0" step="any" inputmode="numeric" placeholder="0" style="padding-left:12px">
-              <span class="suf">units</span></div>
+              <span class="suf" data-i18n="suf_units">units</span></div>
           </div>
           <div class="derived-group" style="display:flex;flex-direction:column;gap:7px">
             <div class="derived hidden" id="varPerUnitOutRow">
-              <span>Variable cost per unit <i style="font-style:normal;color:var(--red)">(auto)</i></span><b id="varPerUnitOut">&mdash;</b>
+              <span data-i18n="d_varAuto">Variable cost per unit <i style="font-style:normal;color:var(--red)">(auto)</i></span><b id="varPerUnitOut">&mdash;</b>
             </div>
             <div class="derived" id="varTotalRow">
-              <span>Total variable cost / month</span><b id="varTotalOut">&mdash;</b>
+              <span data-i18n="varTotal_l">Total variable cost / month</span><b id="varTotalOut">&mdash;</b>
             </div>
             <div class="derived">
-              <span>Fixed cost spread per unit</span><b id="fixedPerUnit">&mdash;</b>
+              <span><span data-i18n="d_fixedPerUnit">Fixed cost spread per unit</span></span><b id="fixedPerUnit">&mdash;</b>
             </div>
             <div class="derived">
-              <span>Total fulfillment cost per unit</span><b id="fulfillOut">&mdash;</b>
+              <span><span data-i18n="d_fulfill">Total fulfillment cost per unit</span></span><b id="fulfillOut">&mdash;</b>
             </div>
           </div>
         </div>
@@ -394,59 +416,59 @@
       <!-- 2. CAC -->
       <div class="card" style="margin-bottom:18px">
         <div class="card-h cac">
-          <div class="num">2</div><h3>Customer acquisition (CAC)</h3>
+          <div class="num">2</div><h3 data-i18n="c2_title">Customer acquisition (CAC)</h3>
         </div>
         <div class="card-b">
           <div class="subseg">
             <div class="seg" id="cacModeSeg" role="group" aria-label="CAC mode" style="width:100%">
-              <button data-mode="direct" aria-pressed="true" style="flex:1">I know my CAC</button>
-              <button data-mode="funnel" aria-pressed="false" style="flex:1">Build from ad funnel</button>
+              <button data-mode="direct" aria-pressed="true" style="flex:1"><span data-i18n="cac_direct">I know my CAC</span></button>
+              <button data-mode="funnel" aria-pressed="false" style="flex:1"><span data-i18n="cac_funnel">Build from ad funnel</span></button>
             </div>
           </div>
 
           <div id="cacDirect">
             <div class="field">
-              <label for="cacInput">Cost to acquire one customer
-                <span class="tip">total ad spend &divide;<br>customers won</span></label>
+              <label for="cacInput"><span data-i18n="cacInput_l">Cost to acquire one customer</span>
+                <span class="tip" data-i18n="cacInput_t">total ad spend &divide;<br>customers won</span></label>
               <div class="inp"><span class="pre cur-pre"></span>
                 <input id="cacInput" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
-                <span class="suf">/ customer</span></div>
+                <span class="suf" data-i18n="suf_customer">/ customer</span></div>
             </div>
           </div>
 
           <div id="cacFunnel" class="hidden">
-            <p style="margin:0 0 13px;font-size:12px;color:var(--gray-mid);font-weight:500">Just count what your ads did &mdash; no percentages needed.</p>
+            <p style="margin:0 0 13px;font-size:12px;color:var(--gray-mid);font-weight:500"><span data-i18n="funnel_intro">Just count what your ads did &mdash; no percentages needed.</span></p>
             <div class="field">
-              <label for="cpc">Cost per click (CPC)
-                <span class="tip">what Meta / Google charge<br>per ad click</span></label>
+              <label for="cpc"><span data-i18n="cpc_l">Cost per click (CPC)</span>
+                <span class="tip" data-i18n="cpc_t">what Meta / Google charge<br>per ad click</span></label>
               <div class="inp"><span class="pre cur-pre"></span>
                 <input id="cpc" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
-                <span class="suf">/ click</span></div>
+                <span class="suf" data-i18n="suf_click">/ click</span></div>
             </div>
             <div class="field">
-              <label for="clicks">How many clicks did you get?
-                <span class="tip">total ad clicks<br>in the period</span></label>
+              <label for="clicks"><span data-i18n="clicks_l">How many clicks did you get?</span>
+                <span class="tip" data-i18n="clicks_t">total ad clicks<br>in the period</span></label>
               <div class="inp">
                 <input id="clicks" type="number" min="0" step="any" inputmode="numeric" placeholder="0" style="padding-left:12px">
-                <span class="suf">clicks</span></div>
+                <span class="suf" data-i18n="suf_clicks">clicks</span></div>
             </div>
             <div class="field">
-              <label for="leads">How many leads did you get?
-                <span class="tip">clicks that turned into<br>an inquiry / message</span></label>
+              <label for="leads"><span data-i18n="leads_l">How many leads did you get?</span>
+                <span class="tip" data-i18n="leads_t">clicks that turned into<br>an inquiry / message</span></label>
               <div class="inp">
                 <input id="leads" type="number" min="0" step="any" inputmode="numeric" placeholder="0" style="padding-left:12px">
-                <span class="suf">leads</span></div>
+                <span class="suf" data-i18n="suf_leads">leads</span></div>
             </div>
             <div class="field">
-              <label for="customers">How many paying customers?
-                <span class="tip">leads that actually<br>bought / booked</span></label>
+              <label for="customers"><span data-i18n="customers_l">How many paying customers?</span>
+                <span class="tip" data-i18n="customers_t">leads that actually<br>bought / booked</span></label>
               <div class="inp">
                 <input id="customers" type="number" min="0" step="any" inputmode="numeric" placeholder="0" style="padding-left:12px">
-                <span class="suf">customers</span></div>
+                <span class="suf" data-i18n="suf_customers">customers</span></div>
             </div>
-            <div class="derived"><span>Total ad spend (CPC &times; clicks)</span><b id="spendOut">&mdash;</b></div>
-            <div class="derived" style="margin-top:7px"><span>Cost per lead (CPL)</span><b id="cplOut">&mdash;</b></div>
-            <div class="derived" style="margin-top:7px"><span>Resulting CAC per customer</span><b id="cacFunnelOut">&mdash;</b></div>
+            <div class="derived"><span><span data-i18n="d_spend">Total ad spend (CPC &times; clicks)</span></span><b id="spendOut">&mdash;</b></div>
+            <div class="derived" style="margin-top:7px"><span><span data-i18n="d_cpl">Cost per lead (CPL)</span></span><b id="cplOut">&mdash;</b></div>
+            <div class="derived" style="margin-top:7px"><span><span data-i18n="d_cacres">Resulting CAC per customer</span></span><b id="cacFunnelOut">&mdash;</b></div>
           </div>
         </div>
       </div>
@@ -454,17 +476,17 @@
       <!-- 3. Profit -->
       <div class="card">
         <div class="card-h profit">
-          <div class="num">3</div><h3>Profit</h3>
+          <div class="num">3</div><h3 data-i18n="c3_title">Profit</h3>
         </div>
         <div class="card-b">
           <div class="subseg">
             <div class="seg" id="profitModeSeg" role="group" aria-label="Profit mode" style="width:100%">
-              <button data-mode="margin" aria-pressed="true" style="flex:1">Margin (% of price)</button>
-              <button data-mode="markup" aria-pressed="false" style="flex:1">Markup (% of cost)</button>
+              <button data-mode="margin" aria-pressed="true" style="flex:1"><span data-i18n="p_margin">Margin (% of price)</span></button>
+              <button data-mode="markup" aria-pressed="false" style="flex:1"><span data-i18n="p_markup">Markup (% of cost)</span></button>
             </div>
           </div>
           <div class="field">
-            <label for="profitPct" id="profitLabel">Target profit margin
+            <label for="profitPct" id="profitLabel"><span id="profitLabelText">Target profit margin</span>
               <span class="tip" id="profitTip">profit as a share<br>of the final price</span></label>
             <div class="inp">
               <input id="profitPct" type="number" min="0" step="any" inputmode="decimal" placeholder="0" style="padding-left:12px">
@@ -478,33 +500,33 @@
     <!-- RESULTS -->
     <div>
       <div class="result-price">
-        <div class="rp-k">Recommended price per unit</div>
+        <div class="rp-k"><span data-i18n="rp_k">Recommended price per unit</span></div>
         <div class="rp-v" id="priceBig">&mdash;</div>
         <div class="rp-sub" id="priceSub">Enter your costs to see the price.</div>
         <div class="warn hidden" id="priceWarn"></div>
       </div>
 
       <div class="totals-box" id="totalsBox">
-        <div class="tb-head">Your month, in total <span id="tbUnits"></span></div>
+        <div class="tb-head"><span data-i18n="tb_head">Your month, in total</span> <span id="tbUnits"></span></div>
         <div class="tb-grid">
           <div class="tb-stat revenue">
-            <div class="tb-k">Total revenue / month</div>
+            <div class="tb-k"><span data-i18n="tb_rev">Total revenue / month</span></div>
             <div class="tb-v" id="tRevenue">&mdash;</div>
           </div>
           <div class="tb-stat profit">
-            <div class="tb-k">Total profit / month</div>
+            <div class="tb-k"><span data-i18n="tb_profit">Total profit / month</span></div>
             <div class="tb-v" id="tProfit">&mdash;</div>
           </div>
         </div>
         <div class="tb-foot">
-          <span>Ad budget (CAC &times; units): <b id="tAdSpend">&mdash;</b></span>
-          <span>All costs: <b id="tCosts">&mdash;</b></span>
+          <span><span data-i18n="tb_ad">Ad budget (CAC &times; units):</span> <b id="tAdSpend">&mdash;</b></span>
+          <span><span data-i18n="tb_costs">All costs:</span> <b id="tCosts">&mdash;</b></span>
         </div>
       </div>
 
       <div class="card" style="margin-top:18px">
         <div class="card-h"><div class="num" style="background:var(--red);color:#fff">%</div>
-          <h3>What makes up the price</h3></div>
+          <h3><span data-i18n="mix_title">What makes up the price</span></h3></div>
         <div class="card-b">
           <div class="bar-wrap">
             <div class="bar" id="bar">
@@ -513,33 +535,33 @@
               <div class="seg-p" id="barP" style="flex:0 0 0"></div>
             </div>
             <div class="legend-row">
-              <span class="lg"><span class="sw" style="background:var(--c-fulfill)"></span>Fulfillment <b id="pctF" style="margin-left:4px">&mdash;</b></span>
-              <span class="lg"><span class="sw" style="background:var(--c-cac)"></span>Acquisition <b id="pctC" style="margin-left:4px">&mdash;</b></span>
-              <span class="lg"><span class="sw" style="background:var(--c-profit)"></span>Profit <b id="pctP" style="margin-left:4px">&mdash;</b></span>
+              <span class="lg"><span class="sw" style="background:var(--c-fulfill)"></span><span data-i18n="lg_f">Fulfillment</span> <b id="pctF" style="margin-left:4px">&mdash;</b></span>
+              <span class="lg"><span class="sw" style="background:var(--c-cac)"></span><span data-i18n="lg_c">Acquisition</span> <b id="pctC" style="margin-left:4px">&mdash;</b></span>
+              <span class="lg"><span class="sw" style="background:var(--c-profit)"></span><span data-i18n="lg_p">Profit</span> <b id="pctP" style="margin-left:4px">&mdash;</b></span>
             </div>
           </div>
 
           <table class="breakdown" style="margin-top:18px">
-            <tr><td class="lab"><span class="sw" style="background:var(--c-fulfill)"></span>Variable cost / unit</td><td class="val" id="rVar">&mdash;</td></tr>
-            <tr><td class="lab"><span class="sw" style="background:var(--c-fulfill)"></span>Fixed cost / unit</td><td class="val" id="rFixed">&mdash;</td></tr>
-            <tr class="sum"><td class="lab">= Fulfillment cost</td><td class="val" id="rFulfill">&mdash;</td></tr>
-            <tr><td class="lab"><span class="sw" style="background:var(--c-cac)"></span>+ Customer acquisition (CAC)</td><td class="val" id="rCac">&mdash;</td></tr>
-            <tr class="floor"><td class="lab">= Break-even price (cost floor)</td><td class="val" id="rFloor">&mdash;</td></tr>
-            <tr><td class="lab"><span class="sw" style="background:var(--c-profit)"></span>+ Profit</td><td class="val" id="rProfit">&mdash;</td></tr>
-            <tr class="grand"><td class="lab">= Recommended price</td><td class="val" id="rPrice">&mdash;</td></tr>
+            <tr><td class="lab"><span class="sw" style="background:var(--c-fulfill)"></span><span data-i18n="r_var">Variable cost / unit</span></td><td class="val" id="rVar">&mdash;</td></tr>
+            <tr><td class="lab"><span class="sw" style="background:var(--c-fulfill)"></span><span data-i18n="r_fixed">Fixed cost / unit</span></td><td class="val" id="rFixed">&mdash;</td></tr>
+            <tr class="sum"><td class="lab"><span data-i18n="r_fulfill">= Fulfillment cost</span></td><td class="val" id="rFulfill">&mdash;</td></tr>
+            <tr><td class="lab"><span class="sw" style="background:var(--c-cac)"></span><span data-i18n="r_cac">+ Customer acquisition (CAC)</span></td><td class="val" id="rCac">&mdash;</td></tr>
+            <tr class="floor"><td class="lab"><span data-i18n="r_floor">= Break-even price (cost floor)</span></td><td class="val" id="rFloor">&mdash;</td></tr>
+            <tr><td class="lab"><span class="sw" style="background:var(--c-profit)"></span><span data-i18n="r_profit">+ Profit</span></td><td class="val" id="rProfit">&mdash;</td></tr>
+            <tr class="grand"><td class="lab"><span data-i18n="r_price">= Recommended price</span></td><td class="val" id="rPrice">&mdash;</td></tr>
           </table>
         </div>
       </div>
 
       <div class="card" style="margin-top:18px">
-        <div class="card-h"><div class="num" style="background:var(--ink);color:#fff">&#8776;</div>
-          <h3>Reality check</h3></div>
+        <div class="card-h"><div class="num" style="background:var(--panel);color:#fff">&#8776;</div>
+          <h3><span data-i18n="rc_title">Reality check</span></h3></div>
         <div class="card-b">
           <div class="metrics">
-            <div class="metric"><div class="mk">Suggested round price</div><div class="mv" id="mRound">&mdash;</div></div>
-            <div class="metric"><div class="mk">Profit margin</div><div class="mv" id="mMargin">&mdash;</div></div>
-            <div class="metric"><div class="mk">Markup on cost</div><div class="mv" id="mMarkup">&mdash;</div></div>
-            <div class="metric" id="beMetric"><div class="mk">Break-even units / mo</div><div class="mv" id="mBE">&mdash;</div></div>
+            <div class="metric"><div class="mk"><span data-i18n="m_round">Suggested round price</span></div><div class="mv" id="mRound">&mdash;</div></div>
+            <div class="metric"><div class="mk" data-i18n="m_margin">Profit margin</div><div class="mv" id="mMargin">&mdash;</div></div>
+            <div class="metric"><div class="mk" data-i18n="m_markup">Markup on cost</div><div class="mv" id="mMarkup">&mdash;</div></div>
+            <div class="metric" id="beMetric"><div class="mk"><span data-i18n="m_be">Break-even units / mo</span></div><div class="mv" id="mBE">&mdash;</div></div>
           </div>
           <div class="be-note" id="beNote">
             At this price, work out how many units you must sell each month just to cover your fixed
@@ -552,65 +574,65 @@
 
   <!-- Legend / Glossary -->
   <div class="section-title">
-    <span class="pill">Legend</span>
-    <h2>What each entry means</h2>
+    <span class="pill" data-i18n="leg_pill">Legend</span>
+    <h2><span data-i18n="leg_h2">What each entry means</span></h2>
   </div>
 
   <div class="glossary">
     <div class="term">
-      <h4><span class="sw" style="background:var(--c-fulfill)"></span>Variable cost per unit</h4>
-      <p>Costs that occur <b>every time you make one more sale</b> &mdash; raw materials, ingredients,
+      <h4><span class="sw" style="background:var(--c-fulfill)"></span><span data-i18n="t1_h">Variable cost per unit</span></h4>
+      <p data-i18n="t1_p">Costs that occur <b>every time you make one more sale</b> &mdash; raw materials, ingredients,
         direct labour on that unit, packaging and payment-processing fees.</p>
-      <div class="ex"><span class="tag">Example</span>One photo-studio booking costs <b>50 MDL</b> in cleaning, electricity and wear.</div>
+      <div class="ex" data-i18n="t1_ex"><span class="tag">Example</span>One photo-studio booking costs <b>50 MDL</b> in cleaning, electricity and wear.</div>
     </div>
 
     <div class="term">
-      <h4><span class="sw" style="background:var(--c-fulfill)"></span>Monthly fixed costs &amp; units</h4>
-      <p>Fixed costs stay the same whether you sell 1 or 1,000 &mdash; rent, base salaries, software,
+      <h4><span class="sw" style="background:var(--c-fulfill)"></span><span data-i18n="t2_h">Monthly fixed costs &amp; units</span></h4>
+      <p data-i18n="t2_p">Fixed costs stay the same whether you sell 1 or 1,000 &mdash; rent, base salaries, software,
         insurance. Divided by your <b>expected monthly units</b>, they give the fixed cost carried by each unit.</p>
-      <div class="ex"><span class="tag">Example</span><b>10,000 MDL</b> studio rent &divide; <b>40</b> bookings = <b>250 MDL</b> of fixed cost per booking.</div>
+      <div class="ex" data-i18n="t2_ex"><span class="tag">Example</span><b>10,000 MDL</b> studio rent &divide; <b>40</b> bookings = <b>250 MDL</b> of fixed cost per booking.</div>
     </div>
 
     <div class="term">
-      <h4><span class="sw" style="background:var(--c-cac)"></span>Customer acquisition cost (CAC)</h4>
-      <p>The real cost of <b>getting one paying customer</b> through advertising. Either enter it directly
+      <h4><span class="sw" style="background:var(--c-cac)"></span><span data-i18n="t3_h">Customer acquisition cost (CAC)</span></h4>
+      <p data-i18n="t3_p">The real cost of <b>getting one paying customer</b> through advertising. Either enter it directly
         (total ad spend &divide; customers won) or build it from your ad funnel below.</p>
-      <div class="ex"><span class="tag">Example</span>A consulting client costs <b>€60</b> to acquire via ads &mdash; that €60 must be built into the retainer.</div>
+      <div class="ex" data-i18n="t3_ex"><span class="tag">Example</span>A consulting client costs <b>€60</b> to acquire via ads &mdash; that €60 must be built into the retainer.</div>
     </div>
 
     <div class="term">
-      <h4><span class="sw" style="background:var(--c-cac)"></span>The ad funnel (just count it)</h4>
-      <p>No percentages to work out &mdash; just read the numbers off your ad dashboard: how many
+      <h4><span class="sw" style="background:var(--c-cac)"></span><span data-i18n="t4_h">The ad funnel (just count it)</span></h4>
+      <p data-i18n="t4_p">No percentages to work out &mdash; just read the numbers off your ad dashboard: how many
         <b>clicks</b>, how many <b>leads</b> (inquiries), and how many <b>paying customers</b>.</p>
-      <p style="font-size:12px;color:var(--gray-mid)">Ad spend = CPC &times; clicks&nbsp;&nbsp;·&nbsp;&nbsp;CPL = spend &divide; leads&nbsp;&nbsp;·&nbsp;&nbsp;CAC = spend &divide; customers</p>
-      <div class="ex"><span class="tag">Example</span>CPC <b>5 MDL</b> &times; <b>400</b> clicks = 2,000 MDL; <b>20</b> booked &rarr; CAC <b>100 MDL</b>.</div>
+      <p style="font-size:12px;color:var(--gray-mid)" data-i18n="t4_p2">Ad spend = CPC &times; clicks&nbsp;&nbsp;·&nbsp;&nbsp;CPL = spend &divide; leads&nbsp;&nbsp;·&nbsp;&nbsp;CAC = spend &divide; customers</p>
+      <div class="ex" data-i18n="t4_ex"><span class="tag">Example</span>CPC <b>5 MDL</b> &times; <b>400</b> clicks = 2,000 MDL; <b>20</b> booked &rarr; CAC <b>100 MDL</b>.</div>
     </div>
 
     <div class="term">
-      <h4><span class="sw" style="background:var(--c-profit)"></span>Profit: margin vs. markup</h4>
-      <p><b>Margin</b> is profit as a share of the <b>price</b>; <b>markup</b> is profit as a share of the
+      <h4><span class="sw" style="background:var(--c-profit)"></span><span data-i18n="t5_h">Profit: margin vs. markup</span></h4>
+      <p data-i18n="t5_p"><b>Margin</b> is profit as a share of the <b>price</b>; <b>markup</b> is profit as a share of the
         <b>cost</b>. A 50% markup is only a 33% margin &mdash; the tool shows both so they're never confused.</p>
-      <div class="ex"><span class="tag">Example</span>Cost <b>70</b>, price <b>100</b> &rarr; 30% margin = 42.9% markup.</div>
+      <div class="ex" data-i18n="t5_ex"><span class="tag">Example</span>Cost <b>70</b>, price <b>100</b> &rarr; 30% margin = 42.9% markup.</div>
     </div>
 
     <div class="term">
-      <h4><span class="sw" style="background:var(--red)"></span>Break-even price &amp; units</h4>
-      <p>The <b>break-even price</b> is fulfillment + CAC &mdash; the floor below which you lose money on
+      <h4><span class="sw" style="background:var(--red)"></span><span data-i18n="t6_h">Break-even price &amp; units</span></h4>
+      <p data-i18n="t6_p">The <b>break-even price</b> is fulfillment + CAC &mdash; the floor below which you lose money on
         every sale. <b>Break-even units</b> is how many you must sell monthly to cover fixed costs at your price.</p>
-      <div class="ex"><span class="tag">Example</span>At <b>667 MDL</b> a booking, a studio needs ~<b>22</b> bookings a month to cover its fixed + ad costs.</div>
+      <div class="ex" data-i18n="t6_ex"><span class="tag">Example</span>At <b>667 MDL</b> a booking, a studio needs ~<b>22</b> bookings a month to cover its fixed + ad costs.</div>
     </div>
 
     <div class="term">
-      <h4><span class="sw" style="background:var(--red)"></span>Total revenue &amp; profit / month</h4>
-      <p>The per-unit price &times; your <b>expected units per month</b> gives the money actually flowing through
+      <h4><span class="sw" style="background:var(--red)"></span><span data-i18n="t7_h">Total revenue &amp; profit / month</span></h4>
+      <p data-i18n="t7_p">The per-unit price &times; your <b>expected units per month</b> gives the money actually flowing through
         the business: <b>revenue</b> (everything you take in) and <b>profit</b> (what's left after all costs and ads).</p>
-      <div class="ex"><span class="tag">Example</span><b>667 MDL</b> &times; 40 bookings = <b>26,667 MDL</b> revenue, ~<b>10,667 MDL</b> profit a month.</div>
+      <div class="ex" data-i18n="t7_ex"><span class="tag">Example</span><b>667 MDL</b> &times; 40 bookings = <b>26,667 MDL</b> revenue, ~<b>10,667 MDL</b> profit a month.</div>
     </div>
   </div>
 
   <div class="example-strip" style="margin-top:18px">
-    <span class="tag">Worked example</span>
-    <p>Load <b>&ldquo;Photography rental + ads&rdquo;</b> above: 50 variable + 250 fixed = <b>300 MDL</b> fulfillment.
+    <span class="tag" data-i18n="ws_tag">Worked example</span>
+    <p data-i18n="ws_p">Load <b>&ldquo;Photography rental + ads&rdquo;</b> above: 50 variable + 250 fixed = <b>300 MDL</b> fulfillment.
       The funnel &mdash; <span class="hl">5 MDL &times; 400 clicks</span>, 20 bookings &mdash; gives a <span class="hl">100 MDL CAC</span>,
       so the cost floor is <b>400 MDL</b>. A <b>40% margin</b> sets the price near <span class="hl">667 MDL</span> a session.
       Across 40 bookings that's <b>~26,667 MDL</b> revenue and <b>~10,667 MDL</b> profit a month. Drop the CAC and watch
@@ -624,8 +646,276 @@
 
 <script src="/tools/vendor/xlsx-js-style-1.2.0.bundle.js"></script>
 <script>
+/* Translations. English for the page text is read from the page itself (each
+   element marked data-i18n), so the English version stays exactly as written.
+   The "en" entries below are only for text the script writes. */
+var PB_I18N = (function(){
+  "use strict";
+  var D = {
+    en: {
+      warn100:"A margin of 100% or more is impossible — profit can never be the whole price. Try a markup instead.",
+      sub_empty:"Enter your costs to see the price.",
+      sub_adjust:"Adjust the profit input.",
+      sub_covers:"Covers delivery, acquisition and a <b>{p}</b> profit margin.",
+      alt_markup:"Equivalent markup on cost", alt_margin:"Equivalent margin on price",
+      tb_units:"at {n} units / month",
+      be_ok:"You plan to sell <b>{u}</b>/mo and only need <b>{b}</b> to break even — healthy headroom.",
+      be_low:"You plan to sell <b>{u}</b>/mo but need <b>{b}</b> to cover fixed costs — raise the price or the volume.",
+      be_only:"You must sell <b>{b}</b> units/month at this price just to cover your fixed costs.",
+      be_default:"At this price, work out how many units you must sell each month to cover your fixed and ad costs — then ask whether that volume is realistic for your capacity.",
+      lbl_margin:"Target profit margin", tip_margin:"profit as a share<br>of the final price",
+      lbl_markup:"Target markup on cost", tip_markup:"profit added on top<br>of total cost",
+      x_noxlsx:"Excel tool didn't load — reload the page.", x_first:"Enter your numbers first.",
+      x_build:"Couldn't build the file.", x_prep:"Preparing…",
+      x_unavail_view:"Saving isn't available in this view.", x_saved:"Saved ✓",
+      x_rate:"A prompt is already open — try again.", x_err:"Couldn't save ({c}).",
+      x_unavail:"Saving isn't available here.", x_dl:"Downloaded ✓", x_dlfail:"Couldn't download.",
+      xl_title:"UMBP · Price Builder",
+      xl_sub:"Live workbook — edit the yellow input cells and everything recalculates.",
+      xl_currency:"Currency", cur_mdl:"Moldovan lei (MDL)", cur_usd:"US dollars ($)", cur_eur:"Euro (€)",
+      xl_s1:"Step 1 — Fulfillment cost (to make / deliver it)",
+      xl_var:"Variable cost per unit", xl_vartot:"Total variable cost / month", xl_fixed:"Monthly fixed costs",
+      xl_units:"Expected units / month", xl_fpu:"Fixed cost per unit", xl_fulf:"Fulfillment per unit",
+      xl_s2:"Step 2 — Customer acquisition cost (CAC)", xl_source:"Source",
+      xl_src_funnel:"Ad funnel (counted)", xl_src_direct:"Entered directly",
+      xl_cpc:"Cost per click (CPC)", xl_clicks:"Clicks", xl_leads:"Leads", xl_cust:"Paying customers",
+      xl_spend:"Total ad spend (CPC × clicks)", xl_cpl:"Cost per lead (CPL)",
+      xl_cacused:"CAC per customer (used in price)",
+      xl_s3:"Step 3 — Profit", xl_method:"Method",
+      xl_m_markup:"Markup (% of cost)", xl_m_margin:"Margin (% of price)",
+      xl_tmarkup:"Target markup", xl_tmargin:"Target margin",
+      xl_result:"Result", xl_floor:"Cost floor (fulfillment + CAC)", xl_price:"RECOMMENDED PRICE",
+      xl_round:"Suggested round price", xl_ppu:"Profit per unit", xl_margin:"Profit margin",
+      xl_markup:"Markup on cost", xl_be:"Break-even units / month",
+      xl_month:"Your month, in total", xl_tu:"Units / month", xl_rev:"Total revenue / month",
+      xl_tprofit:"Total profit / month", xl_ad:"Ad budget / month (CAC × units)", xl_costs:"All costs / month",
+      xl_foot:"Yellow = your inputs (edit freely) · everything else is a formula · ivorycenter.md",
+      xl_sheet:"Pricing & CAC"
+    },
+    ro: {
+      pill:"Calculator de preț", sub:"Parteneriatul de afaceri<br>Utah–Moldova",
+      title:"Constructor de preț",
+      lede:"Prețul trebuie să acopere cât costă să <b>livrezi</b> produsul, cât costă să <b>atragi</b> clientul prin reclame și <b>profitul</b> pe care vrei să-l păstrezi. Introdu cifrele mai jos și prețul recomandat se actualizează instantaneu.",
+      f_fulfill_k:"Cost de livrare", f_fulfill_v:"Produci / livrezi", f_cac_k:"Cost de atragere (CAC)",
+      f_cac_v:"Câștigi clientul", f_profit_k:"Marjă de profit", f_profit_v:"Ce îți rămâne", f_price_k:"Prețul tău",
+      lbl_currency:"Monedă", lbl_example:"Încarcă un exemplu", ex_consulting:"Consultanță financiară (€)",
+      ex_photo:"Închiriere studio foto + reclame (MDL)", ex_clear:"Golește", lbl_save:"Salvează-ți munca",
+      export:"Exportă în Excel",
+      c1_title:"Costuri de livrare", c1_hint:"per unitate / client", var_perunit:"Per unitate", var_total:"Total pe lună",
+      varCost_l:"Cost variabil per unitate", varCost_t:"materiale, muncă directă,<br>ambalaj, comisioane de plată",
+      varTotal_l:"Cost variabil total / lună", varTotal_t:"toate costurile variabile<br>pentru o lună de vânzări",
+      fixed_l:"Costuri fixe lunare", fixed_t:"chirie, salarii de bază,<br>software, asigurare",
+      units_l:"Unități vândute estimate pe lună", units_t:"câte vinzi realist<br>în fiecare lună",
+      suf_unit:"/ unitate", suf_month:"/ lună", suf_units:"unități", suf_customer:"/ client", suf_click:"/ clic",
+      suf_clicks:"clicuri", suf_leads:"solicitări", suf_customers:"clienți",
+      d_varAuto:'Cost variabil per unitate <i style="font-style:normal;color:var(--red)">(auto)</i>',
+      d_fixedPerUnit:"Cost fix repartizat pe unitate", d_fulfill:"Cost total de livrare per unitate",
+      c2_title:"Atragerea clienților (CAC)", cac_direct:"Îmi știu CAC-ul", cac_funnel:"Calculez din pâlnia de reclame",
+      cacInput_l:"Costul atragerii unui client", cacInput_t:"buget total de reclamă ÷<br>clienți câștigați",
+      funnel_intro:"Numără doar ce au adus reclamele — fără procente.",
+      cpc_l:"Cost per clic (CPC)", cpc_t:"cât percep Meta / Google<br>pe un clic",
+      clicks_l:"Câte clicuri ai primit?", clicks_t:"total clicuri pe reclame<br>în perioadă",
+      leads_l:"Câte solicitări ai primit?", leads_t:"clicuri transformate<br>în cerere / mesaj",
+      customers_l:"Câți clienți plătitori?", customers_t:"solicitări care chiar<br>au cumpărat / rezervat",
+      d_spend:"Buget total de reclamă (CPC × clicuri)", d_cpl:"Cost per solicitare (CPL)", d_cacres:"CAC rezultat per client",
+      c3_title:"Profit", p_margin:"Marjă (% din preț)", p_markup:"Adaos (% din cost)",
+      rp_k:"Preț recomandat per unitate", tb_head:"Luna ta, în total", tb_rev:"Venit total / lună",
+      tb_profit:"Profit total / lună", tb_ad:"Buget reclamă (CAC × unități):", tb_costs:"Toate costurile:",
+      mix_title:"Din ce se compune prețul", lg_f:"Livrare", lg_c:"Atragere", lg_p:"Profit",
+      r_var:"Cost variabil / unitate", r_fixed:"Cost fix / unitate", r_fulfill:"= Cost de livrare",
+      r_cac:"+ Atragerea clientului (CAC)", r_floor:"= Preț de echilibru (pragul costurilor)", r_profit:"+ Profit",
+      r_price:"= Preț recomandat",
+      rc_title:"Verificare realistă", m_round:"Preț rotunjit sugerat", m_margin:"Marjă de profit",
+      m_markup:"Adaos la cost", m_be:"Unități de echilibru / lună",
+      leg_pill:"Legendă", leg_h2:"Ce înseamnă fiecare câmp",
+      t1_h:"Cost variabil per unitate",
+      t1_p:"Costuri care apar <b>de fiecare dată când faci încă o vânzare</b> — materii prime, ingrediente, munca directă pentru acea unitate, ambalaj și comisioane de procesare a plăților.",
+      t1_ex:'<span class="tag">Exemplu</span>O rezervare de studio foto costă <b>50 MDL</b> pentru curățenie, electricitate și uzură.',
+      t2_h:"Costuri fixe lunare și unități",
+      t2_p:"Costurile fixe rămân aceleași fie că vinzi 1, fie 1.000 — chirie, salarii de bază, software, asigurare. Împărțite la <b>unitățile lunare estimate</b>, dau costul fix suportat de fiecare unitate.",
+      t2_ex:'<span class="tag">Exemplu</span><b>10.000 MDL</b> chirie pentru studio ÷ <b>40</b> rezervări = <b>250 MDL</b> cost fix per rezervare.',
+      t3_h:"Costul de atragere a clientului (CAC)",
+      t3_p:"Costul real pentru a <b>obține un client plătitor</b> prin publicitate. Fie îl introduci direct (buget total de reclamă ÷ clienți câștigați), fie îl calculezi din pâlnia de reclame de mai jos.",
+      t3_ex:'<span class="tag">Exemplu</span>Un client de consultanță costă <b>60 €</b> pentru a fi atras prin reclame — acești 60 € trebuie incluși în abonament.',
+      t4_h:"Pâlnia de reclame (doar numără)",
+      t4_p:"Fără procente de calculat — citește doar cifrele din panoul de reclame: câte <b>clicuri</b>, câte <b>solicitări</b> și câți <b>clienți plătitori</b>.",
+      t4_p2:"Buget = CPC × clicuri&nbsp;&nbsp;·&nbsp;&nbsp;CPL = buget ÷ solicitări&nbsp;&nbsp;·&nbsp;&nbsp;CAC = buget ÷ clienți",
+      t4_ex:'<span class="tag">Exemplu</span>CPC <b>5 MDL</b> × <b>400</b> clicuri = 2.000 MDL; <b>20</b> rezervări → CAC <b>100 MDL</b>.',
+      t5_h:"Profit: marjă vs. adaos",
+      t5_p:"<b>Marja</b> este profitul ca parte din <b>preț</b>; <b>adaosul</b> este profitul ca parte din <b>cost</b>. Un adaos de 50% înseamnă doar o marjă de 33% — instrumentul le arată pe amândouă ca să nu fie confundate.",
+      t5_ex:'<span class="tag">Exemplu</span>Cost <b>70</b>, preț <b>100</b> → marjă 30% = adaos 42,9%.',
+      t6_h:"Preț și volum de echilibru",
+      t6_p:"<b>Prețul de echilibru</b> este livrarea + CAC — pragul sub care pierzi bani la fiecare vânzare. <b>Unitățile de echilibru</b> arată câte trebuie să vinzi lunar ca să acoperi costurile fixe la prețul tău.",
+      t6_ex:'<span class="tag">Exemplu</span>La <b>667 MDL</b> per rezervare, un studio are nevoie de ~<b>22</b> rezervări pe lună ca să acopere costurile fixe și de reclamă.',
+      t7_h:"Venit și profit total / lună",
+      t7_p:"Prețul per unitate × <b>unitățile lunare estimate</b> arată banii care trec efectiv prin afacere: <b>venitul</b> (tot ce încasezi) și <b>profitul</b> (ce rămâne după toate costurile și reclamele).",
+      t7_ex:'<span class="tag">Exemplu</span><b>667 MDL</b> × 40 rezervări = <b>26.667 MDL</b> venit, ~<b>10.667 MDL</b> profit pe lună.',
+      ws_tag:"Exemplu calculat",
+      ws_p:'Încarcă mai sus <b>„Închiriere studio foto + reclame”</b>: 50 variabil + 250 fix = <b>300 MDL</b> cost de livrare. Pâlnia — <span class="hl">5 MDL × 400 clicuri</span>, 20 rezervări — dă un <span class="hl">CAC de 100 MDL</span>, deci pragul costurilor este <b>400 MDL</b>. O <b>marjă de 40%</b> duce prețul la circa <span class="hl">667 MDL</span> pe ședință. La 40 de rezervări înseamnă <b>~26.667 MDL</b> venit și <b>~10.667 MDL</b> profit pe lună. Scade CAC-ul și vezi cum scade prețul — exact această diferență uită afacerile noi să o includă în preț.',
+      warn100:"O marjă de 100% sau mai mult este imposibilă — profitul nu poate fi tot prețul. Încearcă un adaos.",
+      sub_empty:"Introdu costurile ca să vezi prețul.", sub_adjust:"Ajustează câmpul de profit.",
+      sub_covers:"Acoperă livrarea, atragerea clienților și o marjă de profit de <b>{p}</b>.",
+      alt_markup:"Adaos echivalent la cost", alt_margin:"Marjă echivalentă din preț",
+      tb_units:"la {n} unități / lună",
+      be_ok:"Plănuiești să vinzi <b>{u}</b>/lună și ai nevoie doar de <b>{b}</b> ca să ajungi la echilibru — o rezervă sănătoasă.",
+      be_low:"Plănuiești să vinzi <b>{u}</b>/lună, dar ai nevoie de <b>{b}</b> ca să acoperi costurile fixe — crește prețul sau volumul.",
+      be_only:"Trebuie să vinzi <b>{b}</b> unități/lună la acest preț doar ca să acoperi costurile fixe.",
+      be_default:"La acest preț, calculează câte unități trebuie să vinzi lunar ca să acoperi costurile fixe și de reclamă — apoi întreabă-te dacă acest volum e realist pentru capacitatea ta.",
+      lbl_margin:"Marjă de profit țintă", tip_margin:"profitul ca parte<br>din prețul final",
+      lbl_markup:"Adaos țintă la cost", tip_markup:"profit adăugat peste<br>costul total",
+      x_noxlsx:"Instrumentul Excel nu s-a încărcat — reîncarcă pagina.", x_first:"Introdu mai întâi cifrele.",
+      x_build:"Fișierul nu a putut fi creat.", x_prep:"Se pregătește…",
+      x_unavail_view:"Salvarea nu e disponibilă în această vizualizare.", x_saved:"Salvat ✓",
+      x_rate:"O fereastră este deja deschisă — încearcă din nou.", x_err:"Nu s-a putut salva ({c}).",
+      x_unavail:"Salvarea nu e disponibilă aici.", x_dl:"Descărcat ✓", x_dlfail:"Descărcarea a eșuat.",
+      xl_title:"UMBP · Constructor de preț",
+      xl_sub:"Registru dinamic — editează celulele galbene și totul se recalculează.",
+      xl_currency:"Monedă", cur_mdl:"Lei moldovenești (MDL)", cur_usd:"Dolari SUA ($)", cur_eur:"Euro (€)",
+      xl_s1:"Pasul 1 — Cost de livrare (producție / livrare)",
+      xl_var:"Cost variabil per unitate", xl_vartot:"Cost variabil total / lună", xl_fixed:"Costuri fixe lunare",
+      xl_units:"Unități estimate / lună", xl_fpu:"Cost fix per unitate", xl_fulf:"Cost de livrare per unitate",
+      xl_s2:"Pasul 2 — Costul de atragere a clientului (CAC)", xl_source:"Sursă",
+      xl_src_funnel:"Pâlnia de reclame (numărată)", xl_src_direct:"Introdus direct",
+      xl_cpc:"Cost per clic (CPC)", xl_clicks:"Clicuri", xl_leads:"Solicitări", xl_cust:"Clienți plătitori",
+      xl_spend:"Buget total de reclamă (CPC × clicuri)", xl_cpl:"Cost per solicitare (CPL)",
+      xl_cacused:"CAC per client (folosit în preț)",
+      xl_s3:"Pasul 3 — Profit", xl_method:"Metodă",
+      xl_m_markup:"Adaos (% din cost)", xl_m_margin:"Marjă (% din preț)",
+      xl_tmarkup:"Adaos țintă", xl_tmargin:"Marjă țintă",
+      xl_result:"Rezultat", xl_floor:"Pragul costurilor (livrare + CAC)", xl_price:"PREȚ RECOMANDAT",
+      xl_round:"Preț rotunjit sugerat", xl_ppu:"Profit per unitate", xl_margin:"Marjă de profit",
+      xl_markup:"Adaos la cost", xl_be:"Unități de echilibru / lună",
+      xl_month:"Luna ta, în total", xl_tu:"Unități / lună", xl_rev:"Venit total / lună",
+      xl_tprofit:"Profit total / lună", xl_ad:"Buget reclamă / lună (CAC × unități)", xl_costs:"Toate costurile / lună",
+      xl_foot:"Galben = datele tale (editează liber) · restul sunt formule · ivorycenter.md",
+      xl_sheet:"Preț și CAC"
+    },
+    ru: {
+      pill:"Калькулятор цены", sub:"Деловое партнёрство<br>Юта–Молдова",
+      title:"Конструктор цены",
+      lede:"Цена должна покрывать затраты на <b>выполнение</b> заказа, на <b>привлечение</b> клиента через рекламу и <b>прибыль</b>, которую вы хотите получить. Введите свои цифры ниже — рекомендованная цена обновится мгновенно.",
+      f_fulfill_k:"Себестоимость", f_fulfill_v:"Произвести / доставить", f_cac_k:"Стоимость привлечения (CAC)",
+      f_cac_v:"Привлечь клиента", f_profit_k:"Маржа прибыли", f_profit_v:"Что остаётся вам", f_price_k:"Ваша цена",
+      lbl_currency:"Валюта", lbl_example:"Загрузить пример", ex_consulting:"Финансовый консалтинг (€)",
+      ex_photo:"Аренда фотостудии + реклама (MDL)", ex_clear:"Очистить", lbl_save:"Сохраните работу",
+      export:"Экспорт в Excel",
+      c1_title:"Затраты на выполнение", c1_hint:"на единицу / клиента", var_perunit:"За единицу", var_total:"Всего в месяц",
+      varCost_l:"Переменные затраты на единицу", varCost_t:"материалы, прямой труд,<br>упаковка, комиссии за оплату",
+      varTotal_l:"Переменные затраты всего / месяц", varTotal_t:"все переменные затраты<br>за месяц продаж",
+      fixed_l:"Постоянные затраты в месяц", fixed_t:"аренда, оклады,<br>программы, страховка",
+      units_l:"Ожидаемые продажи в месяц", units_t:"сколько вы реально<br>продаёте в месяц",
+      suf_unit:"/ ед.", suf_month:"/ мес.", suf_units:"ед.", suf_customer:"/ клиента", suf_click:"/ клик",
+      suf_clicks:"кликов", suf_leads:"заявок", suf_customers:"клиентов",
+      d_varAuto:'Переменные затраты на единицу <i style="font-style:normal;color:var(--red)">(авто)</i>',
+      d_fixedPerUnit:"Постоянные затраты на единицу", d_fulfill:"Полная себестоимость единицы",
+      c2_title:"Привлечение клиентов (CAC)", cac_direct:"Я знаю свой CAC", cac_funnel:"Рассчитать по воронке",
+      cacInput_l:"Стоимость привлечения одного клиента", cacInput_t:"общий рекламный бюджет ÷<br>привлечённые клиенты",
+      funnel_intro:"Просто посчитайте результаты рекламы — без процентов.",
+      cpc_l:"Цена за клик (CPC)", cpc_t:"сколько Meta / Google берут<br>за клик",
+      clicks_l:"Сколько кликов вы получили?", clicks_t:"всего кликов по рекламе<br>за период",
+      leads_l:"Сколько заявок вы получили?", leads_t:"клики, ставшие<br>запросом / сообщением",
+      customers_l:"Сколько платящих клиентов?", customers_t:"заявки, которые реально<br>купили / забронировали",
+      d_spend:"Общий рекламный бюджет (CPC × клики)", d_cpl:"Цена заявки (CPL)", d_cacres:"Итоговый CAC на клиента",
+      c3_title:"Прибыль", p_margin:"Маржа (% от цены)", p_markup:"Наценка (% от затрат)",
+      rp_k:"Рекомендуемая цена за единицу", tb_head:"Ваш месяц в целом", tb_rev:"Общая выручка / месяц",
+      tb_profit:"Общая прибыль / месяц", tb_ad:"Рекламный бюджет (CAC × ед.):", tb_costs:"Все затраты:",
+      mix_title:"Из чего складывается цена", lg_f:"Себестоимость", lg_c:"Привлечение", lg_p:"Прибыль",
+      r_var:"Переменные затраты / ед.", r_fixed:"Постоянные затраты / ед.", r_fulfill:"= Себестоимость",
+      r_cac:"+ Привлечение клиента (CAC)", r_floor:"= Цена безубыточности (нижний порог)", r_profit:"+ Прибыль",
+      r_price:"= Рекомендуемая цена",
+      rc_title:"Проверка реальностью", m_round:"Рекомендуемая круглая цена", m_margin:"Маржа прибыли",
+      m_markup:"Наценка на затраты", m_be:"Безубыточность, ед./мес.",
+      leg_pill:"Пояснения", leg_h2:"Что означает каждое поле",
+      t1_h:"Переменные затраты на единицу",
+      t1_p:"Затраты, которые возникают <b>при каждой новой продаже</b> — сырьё, ингредиенты, прямой труд на эту единицу, упаковка и комиссии за приём платежей.",
+      t1_ex:'<span class="tag">Пример</span>Одна бронь фотостудии обходится в <b>50 MDL</b> на уборку, электричество и износ.',
+      t2_h:"Постоянные затраты и объём",
+      t2_p:"Постоянные затраты не меняются, продаёте вы 1 или 1 000 — аренда, оклады, программы, страховка. Разделив их на <b>ожидаемый объём в месяц</b>, вы получите постоянные затраты на каждую единицу.",
+      t2_ex:'<span class="tag">Пример</span><b>10 000 MDL</b> аренды студии ÷ <b>40</b> броней = <b>250 MDL</b> постоянных затрат на бронь.',
+      t3_h:"Стоимость привлечения клиента (CAC)",
+      t3_p:"Реальная стоимость <b>привлечения одного платящего клиента</b> через рекламу. Введите её напрямую (общий бюджет ÷ привлечённые клиенты) или рассчитайте по рекламной воронке ниже.",
+      t3_ex:'<span class="tag">Пример</span>Привлечение клиента консалтинга через рекламу стоит <b>€60</b> — эти €60 нужно заложить в абонентскую плату.',
+      t4_h:"Рекламная воронка (просто посчитайте)",
+      t4_p:"Никаких процентов — просто возьмите цифры из рекламного кабинета: сколько <b>кликов</b>, сколько <b>заявок</b> и сколько <b>платящих клиентов</b>.",
+      t4_p2:"Бюджет = CPC × клики&nbsp;&nbsp;·&nbsp;&nbsp;CPL = бюджет ÷ заявки&nbsp;&nbsp;·&nbsp;&nbsp;CAC = бюджет ÷ клиенты",
+      t4_ex:'<span class="tag">Пример</span>CPC <b>5 MDL</b> × <b>400</b> кликов = 2 000 MDL; <b>20</b> броней → CAC <b>100 MDL</b>.',
+      t5_h:"Прибыль: маржа и наценка",
+      t5_p:"<b>Маржа</b> — это прибыль как доля <b>цены</b>; <b>наценка</b> — прибыль как доля <b>затрат</b>. Наценка 50% — это лишь 33% маржи, поэтому инструмент показывает обе величины.",
+      t5_ex:'<span class="tag">Пример</span>Затраты <b>70</b>, цена <b>100</b> → маржа 30% = наценка 42,9%.',
+      t6_h:"Цена и объём безубыточности",
+      t6_p:"<b>Цена безубыточности</b> — это себестоимость + CAC, порог, ниже которого вы теряете деньги на каждой продаже. <b>Объём безубыточности</b> — сколько нужно продавать в месяц, чтобы покрыть постоянные затраты при вашей цене.",
+      t6_ex:'<span class="tag">Пример</span>При цене <b>667 MDL</b> за бронь студии нужно ~<b>22</b> брони в месяц, чтобы покрыть постоянные и рекламные расходы.',
+      t7_h:"Выручка и прибыль за месяц",
+      t7_p:"Цена за единицу × <b>ожидаемый объём в месяц</b> показывает деньги, которые реально проходят через бизнес: <b>выручку</b> (всё, что вы получаете) и <b>прибыль</b> (что остаётся после всех затрат и рекламы).",
+      t7_ex:'<span class="tag">Пример</span><b>667 MDL</b> × 40 броней = <b>26 667 MDL</b> выручки, ~<b>10 667 MDL</b> прибыли в месяц.',
+      ws_tag:"Разбор примера",
+      ws_p:'Загрузите выше пример <b>«Аренда фотостудии + реклама»</b>: 50 переменных + 250 постоянных = <b>300 MDL</b> себестоимости. Воронка — <span class="hl">5 MDL × 400 кликов</span>, 20 броней — даёт <span class="hl">CAC 100 MDL</span>, значит нижний порог цены <b>400 MDL</b>. <b>Маржа 40%</b> выводит цену примерно на <span class="hl">667 MDL</span> за сессию. При 40 бронях это <b>~26 667 MDL</b> выручки и <b>~10 667 MDL</b> прибыли в месяц. Снизьте CAC и посмотрите, как падает цена — именно эту разницу новые бизнесы забывают включить в цену.',
+      warn100:"Маржа 100% и выше невозможна — прибыль не может составлять всю цену. Используйте наценку.",
+      sub_empty:"Введите затраты, чтобы увидеть цену.", sub_adjust:"Измените значение прибыли.",
+      sub_covers:"Покрывает себестоимость, привлечение и маржу прибыли <b>{p}</b>.",
+      alt_markup:"Эквивалентная наценка на затраты", alt_margin:"Эквивалентная маржа от цены",
+      tb_units:"при {n} ед. / мес.",
+      be_ok:"Вы планируете продавать <b>{u}</b>/мес., а для безубыточности нужно всего <b>{b}</b> — хороший запас.",
+      be_low:"Вы планируете продавать <b>{u}</b>/мес., но для покрытия постоянных затрат нужно <b>{b}</b> — поднимите цену или объём.",
+      be_only:"При этой цене нужно продавать <b>{b}</b> ед./мес. только чтобы покрыть постоянные затраты.",
+      be_default:"Рассчитайте, сколько единиц нужно продавать в месяц при этой цене, чтобы покрыть постоянные и рекламные расходы, — и подумайте, реален ли такой объём для ваших возможностей.",
+      lbl_margin:"Целевая маржа прибыли", tip_margin:"прибыль как доля<br>итоговой цены",
+      lbl_markup:"Целевая наценка на затраты", tip_markup:"прибыль сверх<br>полных затрат",
+      x_noxlsx:"Модуль Excel не загрузился — обновите страницу.", x_first:"Сначала введите свои цифры.",
+      x_build:"Не удалось создать файл.", x_prep:"Подготовка…",
+      x_unavail_view:"Сохранение недоступно в этом режиме.", x_saved:"Сохранено ✓",
+      x_rate:"Окно уже открыто — попробуйте ещё раз.", x_err:"Не удалось сохранить ({c}).",
+      x_unavail:"Сохранение здесь недоступно.", x_dl:"Скачано ✓", x_dlfail:"Не удалось скачать.",
+      xl_title:"UMBP · Конструктор цены",
+      xl_sub:"Живая таблица — меняйте жёлтые ячейки, и всё пересчитается.",
+      xl_currency:"Валюта", cur_mdl:"Молдавские леи (MDL)", cur_usd:"Доллары США ($)", cur_eur:"Евро (€)",
+      xl_s1:"Шаг 1 — Себестоимость (производство / доставка)",
+      xl_var:"Переменные затраты на единицу", xl_vartot:"Переменные затраты всего / месяц", xl_fixed:"Постоянные затраты в месяц",
+      xl_units:"Ожидаемый объём / месяц", xl_fpu:"Постоянные затраты на единицу", xl_fulf:"Себестоимость единицы",
+      xl_s2:"Шаг 2 — Стоимость привлечения клиента (CAC)", xl_source:"Источник",
+      xl_src_funnel:"Рекламная воронка (подсчёт)", xl_src_direct:"Введено вручную",
+      xl_cpc:"Цена за клик (CPC)", xl_clicks:"Клики", xl_leads:"Заявки", xl_cust:"Платящие клиенты",
+      xl_spend:"Общий рекламный бюджет (CPC × клики)", xl_cpl:"Цена заявки (CPL)",
+      xl_cacused:"CAC на клиента (в цене)",
+      xl_s3:"Шаг 3 — Прибыль", xl_method:"Метод",
+      xl_m_markup:"Наценка (% от затрат)", xl_m_margin:"Маржа (% от цены)",
+      xl_tmarkup:"Целевая наценка", xl_tmargin:"Целевая маржа",
+      xl_result:"Результат", xl_floor:"Нижний порог (себестоимость + CAC)", xl_price:"РЕКОМЕНДУЕМАЯ ЦЕНА",
+      xl_round:"Рекомендуемая круглая цена", xl_ppu:"Прибыль на единицу", xl_margin:"Маржа прибыли",
+      xl_markup:"Наценка на затраты", xl_be:"Объём безубыточности / месяц",
+      xl_month:"Ваш месяц в целом", xl_tu:"Единиц / месяц", xl_rev:"Общая выручка / месяц",
+      xl_tprofit:"Общая прибыль / месяц", xl_ad:"Рекламный бюджет / месяц (CAC × ед.)", xl_costs:"Все затраты / месяц",
+      xl_foot:"Жёлтое — ваши данные (меняйте свободно) · остальное — формулы · ivorycenter.md",
+      xl_sheet:"Цена и CAC"
+    }
+  };
+  var lang = "en", hooks = [];
+  // English for every marked element comes from the page as written.
+  var els = document.querySelectorAll("[data-i18n]");
+  for (var i = 0; i < els.length; i++) {
+    var k = els[i].getAttribute("data-i18n");
+    if (!(k in D.en)) D.en[k] = els[i].innerHTML;
+  }
+  function T(k, v) {
+    var s = (D[lang] && D[lang][k]) || D.en[k] || k;
+    if (v) for (var x in v) s = s.split("{" + x + "}").join(v[x]);
+    return s;
+  }
+  function apply(l) {
+    lang = D[l] ? l : "en";
+    document.documentElement.setAttribute("lang", lang);
+    for (var i = 0; i < els.length; i++) els[i].innerHTML = T(els[i].getAttribute("data-i18n"));
+    for (var j = 0; j < hooks.length; j++) hooks[j]();
+  }
+  apply(window.hubLang ? window.hubLang.get() : "en");
+  if (window.hubLang) window.hubLang.subscribe(apply);
+  return { T: T, onChange: function (fn) { hooks.push(fn); }, lang: function () { return lang; } };
+})();
+</script>
+<script>
 (function(){
   "use strict";
+  var T = PB_I18N.T;
   var CUR = {
     MDL:{sym:"MDL",pre:"",suf:"MDL",dec:0,big:function(v){return fmt(v,0)+" MDL";}},
     EUR:{sym:"€",pre:"€",suf:"€",dec:2,big:function(v){return v;}},
@@ -706,7 +996,7 @@
     var p = num("profitPct");
     var price, profit, warn="";
     if(state.profitMode==="margin"){
-      if(p>=100){ price = Infinity; profit = Infinity; warn="A margin of 100% or more is impossible — profit can never be the whole price. Try a markup instead."; }
+      if(p>=100){ price = Infinity; profit = Infinity; warn=T("warn100"); }
       else { price = costBase/(1 - p/100); profit = price - costBase; }
     } else {
       price = costBase*(1 + p/100); profit = price - costBase;
@@ -722,10 +1012,10 @@
     $("fulfillOut").textContent = (varCost||fixedPerUnit) ? money(fulfillment) : "—";
     // profit alt (opposite representation)
     if(state.profitMode==="margin"){
-      $("profitAltLabel").textContent = "Equivalent markup on cost";
+      $("profitAltLabel").textContent = T("alt_markup");
       $("profitAlt").textContent = isFinite(markupEq)&&costBase>0 ? pct(markupEq) : "—";
     } else {
-      $("profitAltLabel").textContent = "Equivalent margin on price";
+      $("profitAltLabel").textContent = T("alt_margin");
       $("profitAlt").textContent = isFinite(marginEq)&&price>0 ? pct(marginEq) : "—";
     }
 
@@ -734,17 +1024,17 @@
     // ---- headline price ----
     if(!hasAny){
       $("priceBig").innerHTML = "&mdash;";
-      $("priceSub").textContent = "Enter your costs to see the price.";
+      $("priceSub").textContent = T("sub_empty");
       $("formulaPrice").innerHTML = "&mdash;";
     } else if(!isFinite(price)){
       $("priceBig").innerHTML = "&mdash;";
-      $("priceSub").textContent = "Adjust the profit input.";
+      $("priceSub").textContent = T("sub_adjust");
       $("formulaPrice").innerHTML = "&mdash;";
     } else {
       var curTag = (state.cur==="MDL") ? "" : "<span class='cur'>"+c.sym+"</span>";
       var priceStr = (state.cur==="MDL") ? fmt(price,0)+" <span style='font-size:.5em;font-weight:700;color:var(--red-bright)'>MDL</span>" : curTag+fmt(price,2);
       $("priceBig").innerHTML = priceStr;
-      $("priceSub").innerHTML = "Covers delivery, acquisition and a <b>"+pct(isFinite(marginEq)?marginEq:0)+"</b> profit margin.";
+      $("priceSub").innerHTML = T("sub_covers",{p:pct(isFinite(marginEq)?marginEq:0)});
       $("formulaPrice").textContent = money(price);
     }
     // warning
@@ -770,7 +1060,7 @@
     var monthlyProfit = canTotal ? profit*units : NaN;
     var monthlyAd = units>0 ? cac*units : NaN;
     var monthlyCosts = (isFinite(revenue)&&isFinite(monthlyProfit)) ? revenue - monthlyProfit : NaN;
-    $("tbUnits").textContent = units>0 ? "at "+fmt(units,0)+" units / month" : "";
+    $("tbUnits").textContent = units>0 ? T("tb_units",{n:fmt(units,0)}) : "";
     $("tRevenue").textContent = isFinite(revenue)? money(revenue) : "—";
     $("tProfit").textContent  = isFinite(monthlyProfit)? money(monthlyProfit) : "—";
     $("tAdSpend").textContent = (units>0 && cac>0)? money(monthlyAd) : (units>0? money(0):"—");
@@ -801,14 +1091,14 @@
       if(units>0 && beUnits>units){ beMetric.classList.add("flag"); }
       else{ beMetric.classList.remove("flag"); }
       var cover = (units>0)? (units>=beUnits
-          ? "You plan to sell <b>"+fmt(units,0)+"</b>/mo and only need <b>"+Math.ceil(beUnits).toLocaleString("en-US")+"</b> to break even — healthy headroom."
-          : "You plan to sell <b>"+fmt(units,0)+"</b>/mo but need <b>"+Math.ceil(beUnits).toLocaleString("en-US")+"</b> to cover fixed costs — raise the price or the volume.")
-        : "You must sell <b>"+Math.ceil(beUnits).toLocaleString("en-US")+"</b> units/month at this price just to cover your fixed costs.";
+          ? T("be_ok",{u:fmt(units,0),b:Math.ceil(beUnits).toLocaleString("en-US")})
+          : T("be_low",{u:fmt(units,0),b:Math.ceil(beUnits).toLocaleString("en-US")}))
+        : T("be_only",{b:Math.ceil(beUnits).toLocaleString("en-US")});
       $("beNote").innerHTML = cover;
     } else {
       $("mBE").innerHTML = "&mdash;";
       beMetric.classList.remove("flag");
-      $("beNote").innerHTML = "At this price, work out how many units you must sell each month to cover your fixed and ad costs — then ask whether that volume is realistic for your capacity.";
+      $("beNote").innerHTML = T("be_default");
     }
 
     // ---- snapshot for export ----
@@ -844,6 +1134,13 @@
     });
   }
 
+  // Profit label and tip follow the chosen mode and the language.
+  function paintProfitLabels(){
+    var m = state.profitMode==="margin";
+    $("profitLabelText").textContent = T(m ? "lbl_margin" : "lbl_markup");
+    $("profitTip").innerHTML = T(m ? "tip_margin" : "tip_markup");
+  }
+
   function applyVarMode(){
     var total = state.varMode==="total";
     $("varPerUnit").classList.toggle("hidden", total);
@@ -862,13 +1159,7 @@
   });
   bindSeg("profitModeSeg", function(b){
     state.profitMode = b.getAttribute("data-mode");
-    if(state.profitMode==="margin"){
-      $("profitLabel").childNodes[0].nodeValue = "Target profit margin ";
-      $("profitTip").innerHTML = "profit as a share<br>of the final price";
-    } else {
-      $("profitLabel").childNodes[0].nodeValue = "Target markup on cost ";
-      $("profitTip").innerHTML = "profit added on top<br>of total cost";
-    }
+    paintProfitLabels();
     calc();
   });
 
@@ -891,8 +1182,7 @@
     state.cacMode="direct"; setSeg("cacModeSeg","data-mode","direct");
     $("cacDirect").classList.remove("hidden"); $("cacFunnel").classList.add("hidden");
     state.profitMode="margin"; setSeg("profitModeSeg","data-mode","margin");
-    $("profitLabel").childNodes[0].nodeValue="Target profit margin ";
-    $("profitTip").innerHTML="profit as a share<br>of the final price";
+    paintProfitLabels();
     clearAll();
     fill({varCost:25, fixedMonthly:2000, units:10, cacInput:60, profitPct:40});
     paintCurrency(); calc();
@@ -905,8 +1195,7 @@
     state.cacMode="funnel"; setSeg("cacModeSeg","data-mode","funnel");
     $("cacDirect").classList.add("hidden"); $("cacFunnel").classList.remove("hidden");
     state.profitMode="margin"; setSeg("profitModeSeg","data-mode","margin");
-    $("profitLabel").childNodes[0].nodeValue="Target profit margin ";
-    $("profitTip").innerHTML="profit as a share<br>of the final price";
+    paintProfitLabels();
     clearAll();
     fill({varCost:50, fixedMonthly:10000, units:40, cpc:5, clicks:400, leads:40, customers:20, profitPct:40});
     paintCurrency(); calc();
@@ -921,31 +1210,31 @@ function buildPricingWorkbook(XLSX, d){
   var cur = d.cur || "MDL";
   function mfmt(){ return cur==="MDL" ? '#,##0.00" MDL"' : (cur==="USD" ? '"$"#,##0.00' : '"\u20AC"#,##0.00'); }
   var MF = mfmt(), PF = "0.0%", UF = "#,##0";
-  var curName = cur==="MDL" ? "Moldovan lei (MDL)" : (cur==="USD" ? "US dollars ($)" : "Euro (\u20AC)");
+  var curName = cur==="MDL" ? T("cur_mdl") : (cur==="USD" ? T("cur_usd") : T("cur_eur"));
   function fin(x){ return (typeof x==="number" && isFinite(x)) ? x : ""; }
 
   var rows = [];
   function push(o){ rows.push(o); return rows.length-1; }   // returns 0-based row index
   function B(i){ return "B"+(i+1); }                        // value cell address for a row index
 
-  push({t:"title", a:"UMBP \u00B7 Price Builder"});
-  push({t:"sub",   a:"Live workbook \u2014 edit the yellow input cells and everything recalculates."});
-  push({t:"kv", a:"Currency", b:curName, text:true});
+  push({t:"title", a:T("xl_title")});
+  push({t:"sub",   a:T("xl_sub")});
+  push({t:"kv", a:T("xl_currency"), b:curName, text:true});
   push({t:"blank"});
 
-  push({t:"sec", a:"Step 1 \u2014 Fulfillment cost (to make / deliver it)"});
+  push({t:"sec", a:T("xl_s1")});
   var iVar, iVarTot;
   if(d.varMode==="total"){
-    iVar    = push({t:"kv", a:"Variable cost per unit", b:fin(d.varCost), f:MF});
-    iVarTot = push({t:"kv", a:"Total variable cost / month", b:fin(d.varTotal), f:MF, input:true});
+    iVar    = push({t:"kv", a:T("xl_var"), b:fin(d.varCost), f:MF});
+    iVarTot = push({t:"kv", a:T("xl_vartot"), b:fin(d.varTotal), f:MF, input:true});
   } else {
-    iVar    = push({t:"kv", a:"Variable cost per unit", b:fin(d.varCost), f:MF, input:true});
-    iVarTot = push({t:"kv", a:"Total variable cost / month", b:fin(d.varTotal), f:MF});
+    iVar    = push({t:"kv", a:T("xl_var"), b:fin(d.varCost), f:MF, input:true});
+    iVarTot = push({t:"kv", a:T("xl_vartot"), b:fin(d.varTotal), f:MF});
   }
-  var iFixed = push({t:"kv", a:"Monthly fixed costs", b:fin(d.fixedMonthly), f:MF, input:true});
-  var iUnits = push({t:"kv", a:"Expected units / month", b:fin(d.units), f:UF, input:true});
-  var iFPU   = push({t:"kv", a:"Fixed cost per unit", b:fin(d.fixedPerUnit), f:MF});
-  var iFulf  = push({t:"kv", a:"Fulfillment per unit", b:fin(d.fulfillment), f:MF, emph:true});
+  var iFixed = push({t:"kv", a:T("xl_fixed"), b:fin(d.fixedMonthly), f:MF, input:true});
+  var iUnits = push({t:"kv", a:T("xl_units"), b:fin(d.units), f:UF, input:true});
+  var iFPU   = push({t:"kv", a:T("xl_fpu"), b:fin(d.fixedPerUnit), f:MF});
+  var iFulf  = push({t:"kv", a:T("xl_fulf"), b:fin(d.fulfillment), f:MF, emph:true});
   if(d.varMode==="total"){
     rows[iVar].fo = "IF("+B(iUnits)+"=0,0,"+B(iVarTot)+"/"+B(iUnits)+")";
   } else {
@@ -955,39 +1244,39 @@ function buildPricingWorkbook(XLSX, d){
   rows[iFulf].fo = B(iVar)+"+"+B(iFPU);
   push({t:"blank"});
 
-  push({t:"sec", a:"Step 2 \u2014 Customer acquisition cost (CAC)"});
+  push({t:"sec", a:T("xl_s2")});
   var iCacUsed;
   if(d.cacMode==="funnel"){
-    push({t:"kv", a:"Source", b:"Ad funnel (counted)", text:true});
-    var iCpc   = push({t:"kv", a:"Cost per click (CPC)", b:fin(d.cpc), f:MF, input:true});
-    var iClick = push({t:"kv", a:"Clicks", b:fin(d.clicks), f:UF, input:true});
-    var iLead  = push({t:"kv", a:"Leads", b:fin(d.leads), f:UF, input:true});
-    var iCust  = push({t:"kv", a:"Paying customers", b:fin(d.customers), f:UF, input:true});
-    var iSpend = push({t:"kv", a:"Total ad spend (CPC \u00D7 clicks)", b:fin(d.spend), f:MF});
-    var iCpl   = push({t:"kv", a:"Cost per lead (CPL)", b:fin(d.cpl), f:MF});
-    iCacUsed   = push({t:"kv", a:"CAC per customer (used in price)", b:fin(d.cac), f:MF, emph:true});
+    push({t:"kv", a:T("xl_source"), b:T("xl_src_funnel"), text:true});
+    var iCpc   = push({t:"kv", a:T("xl_cpc"), b:fin(d.cpc), f:MF, input:true});
+    var iClick = push({t:"kv", a:T("xl_clicks"), b:fin(d.clicks), f:UF, input:true});
+    var iLead  = push({t:"kv", a:T("xl_leads"), b:fin(d.leads), f:UF, input:true});
+    var iCust  = push({t:"kv", a:T("xl_cust"), b:fin(d.customers), f:UF, input:true});
+    var iSpend = push({t:"kv", a:T("xl_spend"), b:fin(d.spend), f:MF});
+    var iCpl   = push({t:"kv", a:T("xl_cpl"), b:fin(d.cpl), f:MF});
+    iCacUsed   = push({t:"kv", a:T("xl_cacused"), b:fin(d.cac), f:MF, emph:true});
     rows[iSpend].fo   = B(iCpc)+"*"+B(iClick);
     rows[iCpl].fo     = "IF("+B(iLead)+"=0,0,"+B(iSpend)+"/"+B(iLead)+")";
     rows[iCacUsed].fo = "IF("+B(iCust)+"=0,0,"+B(iSpend)+"/"+B(iCust)+")";
   } else {
-    push({t:"kv", a:"Source", b:"Entered directly", text:true});
-    iCacUsed = push({t:"kv", a:"CAC per customer (used in price)", b:fin(d.cac), f:MF, input:true, emph:true});
+    push({t:"kv", a:T("xl_source"), b:T("xl_src_direct"), text:true});
+    iCacUsed = push({t:"kv", a:T("xl_cacused"), b:fin(d.cac), f:MF, input:true, emph:true});
   }
   push({t:"blank"});
 
-  push({t:"sec", a:"Step 3 \u2014 Profit"});
-  push({t:"kv", a:"Method", b:(d.profitMode==="markup"?"Markup (% of cost)":"Margin (% of price)"), text:true});
-  var iPct = push({t:"kv", a:(d.profitMode==="markup"?"Target markup":"Target margin"), b:fin(d.profitPct/100), f:PF, input:true});
+  push({t:"sec", a:T("xl_s3")});
+  push({t:"kv", a:T("xl_method"), b:(d.profitMode==="markup"?T("xl_m_markup"):T("xl_m_margin")), text:true});
+  var iPct = push({t:"kv", a:(d.profitMode==="markup"?T("xl_tmarkup"):T("xl_tmargin")), b:fin(d.profitPct/100), f:PF, input:true});
   push({t:"blank"});
 
-  push({t:"sec", a:"Result"});
-  var iFloor = push({t:"kv", a:"Cost floor (fulfillment + CAC)", b:fin(d.costBase), f:MF});
-  var iPrice = push({t:"kv", a:"RECOMMENDED PRICE", b:fin(d.price), f:MF, red:true});
-  var iRound = push({t:"kv", a:"Suggested round price", b:fin(d.roundPrice), f:MF});
-  var iPU    = push({t:"kv", a:"Profit per unit", b:fin(d.profit), f:MF});
-  var iMarg  = push({t:"kv", a:"Profit margin", b:fin(d.marginEq/100), f:PF});
-  var iMark  = push({t:"kv", a:"Markup on cost", b:fin(d.markupEq/100), f:PF});
-  var iBE    = push({t:"kv", a:"Break-even units / month", b:(isFinite(d.beUnits)?Math.ceil(d.beUnits):""), f:UF});
+  push({t:"sec", a:T("xl_result")});
+  var iFloor = push({t:"kv", a:T("xl_floor"), b:fin(d.costBase), f:MF});
+  var iPrice = push({t:"kv", a:T("xl_price"), b:fin(d.price), f:MF, red:true});
+  var iRound = push({t:"kv", a:T("xl_round"), b:fin(d.roundPrice), f:MF});
+  var iPU    = push({t:"kv", a:T("xl_ppu"), b:fin(d.profit), f:MF});
+  var iMarg  = push({t:"kv", a:T("xl_margin"), b:fin(d.marginEq/100), f:PF});
+  var iMark  = push({t:"kv", a:T("xl_markup"), b:fin(d.markupEq/100), f:PF});
+  var iBE    = push({t:"kv", a:T("xl_be"), b:(isFinite(d.beUnits)?Math.ceil(d.beUnits):""), f:UF});
   rows[iFloor].fo = B(iFulf)+"+"+B(iCacUsed);
   rows[iPrice].fo = (d.profitMode==="markup")
       ? B(iFloor)+"*(1+"+B(iPct)+")"
@@ -1001,19 +1290,19 @@ function buildPricingWorkbook(XLSX, d){
   rows[iBE].fo   = "IFERROR(ROUNDUP("+B(iFixed)+"/("+B(iPrice)+"-"+B(iVar)+"-"+B(iCacUsed)+"),0),\"\")";
   push({t:"blank"});
 
-  push({t:"sec", a:"Your month, in total"});
-  var iTU   = push({t:"kv", a:"Units / month", b:fin(d.units), f:UF});
-  var iTRev = push({t:"kv", a:"Total revenue / month", b:fin(d.revenue), f:MF, emph:true});
-  var iTPft = push({t:"kv", a:"Total profit / month", b:fin(d.monthlyProfit), f:MF, red:true});
-  var iTAd  = push({t:"kv", a:"Ad budget / month (CAC \u00D7 units)", b:fin(d.monthlyAd), f:MF});
-  var iTC   = push({t:"kv", a:"All costs / month", b:fin(d.monthlyCosts), f:MF});
+  push({t:"sec", a:T("xl_month")});
+  var iTU   = push({t:"kv", a:T("xl_tu"), b:fin(d.units), f:UF});
+  var iTRev = push({t:"kv", a:T("xl_rev"), b:fin(d.revenue), f:MF, emph:true});
+  var iTPft = push({t:"kv", a:T("xl_tprofit"), b:fin(d.monthlyProfit), f:MF, red:true});
+  var iTAd  = push({t:"kv", a:T("xl_ad"), b:fin(d.monthlyAd), f:MF});
+  var iTC   = push({t:"kv", a:T("xl_costs"), b:fin(d.monthlyCosts), f:MF});
   rows[iTU].fo   = B(iUnits);
   rows[iTRev].fo = B(iPrice)+"*"+B(iUnits);
   rows[iTPft].fo = B(iPU)+"*"+B(iUnits);
   rows[iTAd].fo  = B(iCacUsed)+"*"+B(iUnits);
   rows[iTC].fo   = B(iTRev)+"-"+B(iTPft);
   push({t:"blank"});
-  push({t:"sub", a:"Yellow = your inputs (edit freely) \u00B7 everything else is a formula \u00B7 ivorycenter.md"});
+  push({t:"sub", a:T("xl_foot")});
 
   // ---- render ----
   var aoa = rows.map(function(r){ return [r.a!==undefined?r.a:"", r.b!==undefined?r.b:""]; });
@@ -1053,7 +1342,7 @@ function buildPricingWorkbook(XLSX, d){
   });
   ws["!rows"]=rowHeights;
   var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Pricing & CAC");
+  XLSX.utils.book_append_sheet(wb, ws, T("xl_sheet"));
   return wb;
 }
 
@@ -1076,42 +1365,44 @@ function buildPricingWorkbook(XLSX, d){
 
   function exportXlsx(){
     if(typeof XLSX === "undefined" || !XLSX.utils){
-      exportStatus("Excel tool didn't load — reload the page.", "err"); return;
+      exportStatus(T("x_noxlsx"), "err"); return;
     }
     if(!last || !last.valid){
-      exportStatus("Enter your numbers first.", "err"); return;
+      exportStatus(T("x_first"), "err"); return;
     }
     var blob;
     try{
       var wb = buildPricingWorkbook(XLSX, last);
       var arr = XLSX.write(wb, {bookType:"xlsx", type:"array"});
       blob = new Blob([arr], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-    }catch(e){ exportStatus("Couldn't build the file.", "err"); return; }
+    }catch(e){ exportStatus(T("x_build"), "err"); return; }
     var filename = "UMBP-price-builder-" + last.cur + ".xlsx";
 
     if(window.claude && typeof window.claude.use === "function"){
       // Published claude.ai page: hand the file to the viewer via the downloads capability.
-      exportStatus("Preparing\u2026");
+      exportStatus(T("x_prep"));
       window.claude.use("downloads").then(function(dl){
-        if(!dl || typeof dl.save !== "function"){ exportStatus("Saving isn't available in this view.", "err"); return; }
+        if(!dl || typeof dl.save !== "function"){ exportStatus(T("x_unavail_view"), "err"); return; }
         dl.save({ filename:filename, data:blob }).then(function(){
-          exportStatus("Saved \u2713", "ok");
+          exportStatus(T("x_saved"), "ok");
         }).catch(function(err){
           var code = err && err.code;
           if(code === "declined"){ exportStatus(""); }
-          else if(code === "rate_limited"){ exportStatus("A prompt is already open \u2014 try again.", "err"); }
-          else { exportStatus("Couldn't save (" + (code || "error") + ").", "err"); }
+          else if(code === "rate_limited"){ exportStatus(T("x_rate"), "err"); }
+          else { exportStatus(T("x_err",{c:(code || "error")}), "err"); }
         });
-      }).catch(function(){ exportStatus("Saving isn't available here.", "err"); });
+      }).catch(function(){ exportStatus(T("x_unavail"), "err"); });
     } else {
       // Opened as a local file / other runtime: normal browser download.
-      if(anchorSave(filename, blob)) exportStatus("Downloaded \u2713", "ok");
-      else exportStatus("Couldn't download.", "err");
+      if(anchorSave(filename, blob)) exportStatus(T("x_dl"), "ok");
+      else exportStatus(T("x_dlfail"), "err");
     }
   }
 
   // ---- init ----
   document.getElementById("btnExport").addEventListener("click", exportXlsx);
+  PB_I18N.onChange(function(){ exportStatus(""); paintProfitLabels(); calc(); });
+  paintProfitLabels();
   applyVarMode();
   paintCurrency();
   calc();

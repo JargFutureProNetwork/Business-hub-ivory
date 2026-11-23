@@ -28,6 +28,7 @@ import { BlockCard, type Highlight } from "@/components/cards";
 import { EditorModal } from "@/components/EditorModal";
 import { ImageModal } from "@/components/ImageModal";
 import { Report, type AiState, type LastRun, type PassState } from "@/components/Report";
+import { useConsent } from "@/lib/consent";
 
 const STORAGE_KEY = "umbp-bmc-v1";
 
@@ -75,6 +76,8 @@ export default function App() {
   const [aiKey, setAiKey] = useState("");
   const [lastRun, setLastRun] = useState<LastRun | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // The canvas is kept in this browser only after the hub's storage consent is accepted.
+  const consent = useConsent();
 
   // Restoring the saved canvas has to happen after mount: reading localStorage
   // during render would make the server and client markup disagree. One
@@ -135,7 +138,7 @@ export default function App() {
     findings.filter((f) => f.item && f.itemBlock === key).map((f) => ({ item: f.item, priority: f.priority }));
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || consent !== "accepted") return;
     try {
       localStorage.setItem(
         STORAGE_KEY,
@@ -144,7 +147,7 @@ export default function App() {
     } catch {
       /* a full or blocked store shouldn't break editing */
     }
-  }, [hydrated, name, meta, canvas, showReport, ai, aiAt, aiKey, lastRun, dismissed, addedIds]);
+  }, [hydrated, consent, name, meta, canvas, showReport, ai, aiAt, aiKey, lastRun, dismissed, addedIds]);
 
   // Missing-input gaps: hide dismissed ones; a gap counts as added once its draft is in the target block.
   // Remember added gaps by id so they stay resolved after the user edits the [brackets].

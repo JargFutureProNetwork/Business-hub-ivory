@@ -1,0 +1,11 @@
+import type { Metadata } from "next";
+import { ToolFrame } from "@/components/hub/ToolFrame";
+import { TOOL_BY_SLUG } from "@/lib/tools";
+
+const tool = TOOL_BY_SLUG["feed-planner"];
+
+export const metadata: Metadata = { title: tool.text.en.name, description: tool.text.en.description };
+
+export default function Page() {
+  return <ToolFrame slug="feed-planner" />;
+}

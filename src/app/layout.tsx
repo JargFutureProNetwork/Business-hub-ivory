@@ -3,6 +3,8 @@ import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/hub/SiteHeader";
 import { SiteFooter } from "@/components/hub/SiteFooter";
+import { ConsentBanner } from "@/components/hub/ConsentBanner";
+import { LangProvider } from "@/lib/i18n";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -22,11 +24,12 @@ export const metadata: Metadata = {
     template: "%s · Ivory Center Business Hub",
   },
   description:
-    "Interactive business tools from Ivory Center and the Utah-Moldova Business Partnership: Business Model Canvas, Price Builder, UVP & Copy Workbench, and curated resources.",
+    "Interactive business tools from Ivory Center and the Utah-Moldova Business Partnership: Business Model Canvas, Price Builder, UVP & Copy Workbench, Feed Planner, and curated resources.",
 };
 
-/** Applies the saved theme before first paint so dark mode doesn't flash. */
-const THEME_BOOTSTRAP = `try{var t=localStorage.getItem('umbp-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}`;
+/** Applies the saved theme and language before first paint, so dark mode doesn't flash
+ *  and embedded tools start in the chosen language. English is the default. */
+const THEME_BOOTSTRAP = `try{var r=document.documentElement,t=localStorage.getItem('umbp-theme');if(t)r.setAttribute('data-theme',t);var l=localStorage.getItem('ivory-lang');if(l==='ro'||l==='ru')r.setAttribute('lang',l);}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -41,9 +44,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>
       <body className="font-sans">
-        <SiteHeader />
-        {children}
-        <SiteFooter />
+        <LangProvider>
+          <SiteHeader />
+          {children}
+          <SiteFooter />
+          <ConsentBanner />
+        </LangProvider>
       </body>
     </html>
   );

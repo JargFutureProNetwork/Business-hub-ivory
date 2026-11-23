@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feed Planner · Ivory Center Business Hub</title>
+<!-- Feed Preview Studio, embedded in the Business Hub without the Meta connection:
+     projects are saved in this browser (after storage consent), "Plan with Gemini"
+     runs through the hub's /api/feed-plan route. studio.js and studio.css are the
+     original planner files with the changes marked "Business Hub". -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Caveat:wght@600&family=DM+Serif+Display&family=Figtree:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Sora:wght@500;600&display=swap">
+<link rel="stylesheet" href="/tools/feed-planner/studio.css">
+<script src="/tools/hub-bridge.js"></script>
+<script>
+/* Theme: the hub's toggle when embedded, otherwise the saved choice or the OS. */
+(function(){
+  var root = document.documentElement;
+  function set(t){ root.setAttribute("data-theme", t === "dark" ? "dark" : "light"); }
+  var t = window.hubTheme && window.hubTheme.get();
+  if(!t){ try{ t = localStorage.getItem("umbp-theme"); }catch(e){} }
+  if(!t){ t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+  set(t);
+  if(window.hubTheme) window.hubTheme.subscribe(set);
+})();
+window.__FPS__ = { preview: false, account: null };
+</script>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="rail" id="rail" aria-label="Posts by format"></aside>
+  <div class="main">
+    <header class="bar" id="bar"></header>
+    <div class="notice" id="notice" hidden></div>
+    <main class="canvas" id="canvas"></main>
+  </div>
+</div>
+<div class="scrim" id="scrim" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="/tools/vendor/jszip-3.10.1.min.js"></script>
+<script src="/tools/feed-planner/studio.js"></script>
+</body>
+</html>

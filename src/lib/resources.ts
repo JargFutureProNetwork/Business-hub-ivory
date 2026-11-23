@@ -1,4 +1,5 @@
 import type { BrandIconKey } from "./brand-icons";
+import type { Lang } from "./i18n";
 
 /**
  * Tools listed on the Resources page.
@@ -18,6 +19,8 @@ export type Resource = {
   maker: string;
   category: string;
   description: string;
+  /** Romanian and Russian descriptions; `description` is the English one. */
+  tr: { ro: string; ru: string };
   logo?: string;
   icon?: BrandIconKey;
   color: string;
@@ -26,6 +29,7 @@ export type Resource = {
 export const RESOURCES: Resource[] = [
   {
     name: "ChatGPT",
+    tr: { ro: "Asistent AI universal pentru postări și emailuri, idei noi, rezumate de documente și răspunsuri la întrebări de afaceri.", ru: "Универсальный ИИ-ассистент: посты и письма, новые идеи, краткие пересказы документов и ответы на деловые вопросы." },
     logo: "/resources/logos/chatgpt.png",
     url: "https://chatgpt.com/",
     domain: "chatgpt.com",
@@ -37,6 +41,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "ChatGPT Scheduled Tasks",
+    tr: { ro: "Programează ChatGPT să ruleze o cerere periodic: rezumate zilnice de știri, idei săptămânale de conținut sau mementouri automate.", ru: "Запускайте запросы ChatGPT по расписанию: ежедневные сводки новостей, еженедельные идеи для контента или автоматические напоминания." },
     logo: "/resources/logos/chatgpt.png",
     url: "https://chatgpt.com/scheduled",
     domain: "chatgpt.com",
@@ -48,6 +53,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Claude",
+    tr: { ro: "Asistent AI pentru scris, analiză și cercetare. Puternic cu documente lungi, raționament atent și crearea de instrumente sau pagini mici.", ru: "ИИ-ассистент для текстов, анализа и исследований. Силён в длинных документах, вдумчивых рассуждениях и создании небольших инструментов и страниц." },
     url: "https://claude.ai",
     domain: "claude.ai",
     maker: "Anthropic",
@@ -59,6 +65,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Perplexity",
+    tr: { ro: "Motor de răspunsuri AI care caută pe web și își citează sursele. Bun pentru cercetare rapidă de piață și concurență, ușor de verificat.", ru: "ИИ-поисковик, который ищет в интернете и указывает источники. Удобен для быстрого и проверяемого анализа рынка и конкурентов." },
     url: "https://www.perplexity.ai/",
     domain: "perplexity.ai",
     maker: "Perplexity",
@@ -70,6 +77,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Canva",
+    tr: { ro: "Creează postări, flyere, prezentări, logouri și videoclipuri scurte din mii de șabloane, cu instrumente AI integrate.", ru: "Создавайте посты, флаеры, презентации, логотипы и короткие видео из тысяч шаблонов со встроенными ИИ-инструментами." },
     logo: "/resources/logos/canva.png",
     url: "https://www.canva.com/",
     domain: "canva.com",
@@ -81,6 +89,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Gamma",
+    tr: { ro: "Transformă o schiță sau o cerere într-o prezentare, un document sau un site de o pagină în câteva minute, cu AI.", ru: "Превращайте план или запрос в готовую презентацию, документ или одностраничный сайт за несколько минут с помощью ИИ." },
     logo: "/resources/logos/gamma.png",
     url: "https://gamma.app/",
     domain: "gamma.app",
@@ -92,6 +101,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Nano Banana",
+    tr: { ro: "Modelul de imagini Gemini de la Google pentru a genera și edita imagini din text: fotografii de produs, fundaluri și editări rapide.", ru: "Модель изображений Gemini от Google: создание и редактирование картинок по тексту — фото товаров, фоны и быстрые правки." },
     logo: "/resources/logos/nano-banana.png",
     url: "https://aistudio.google.com/models/nano-banana",
     domain: "aistudio.google.com",
@@ -104,6 +114,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Pexels",
+    tr: { ro: "Fotografii și videoclipuri gratuite pe care le poți folosi în postări, reclame și site-uri fără să plătești licență.", ru: "Бесплатные фото и видео для постов, рекламы и сайтов без оплаты лицензии." },
     url: "https://pexels.com",
     domain: "pexels.com",
     maker: "Pexels",
@@ -114,6 +125,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "CapCut",
+    tr: { ro: "Editor video pentru Reels și TikTok cu șabloane, subtitrări automate, efecte și eliminarea fundalului, pe telefon sau calculator.", ru: "Видеоредактор для Reels и TikTok: шаблоны, автосубтитры, эффекты и удаление фона — на телефоне или компьютере." },
     logo: "/resources/logos/capcut.png",
     url: "https://www.capcut.com/",
     domain: "capcut.com",
@@ -125,6 +137,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Google Flow",
+    tr: { ro: "Instrument AI de filmare bazat pe modelele Veo de la Google. Generează clipuri și scene video din text și imagini.", ru: "ИИ-инструмент для видеосъёмки на моделях Veo от Google. Создаёт видеоклипы и сцены по тексту и изображениям." },
     logo: "/resources/logos/google-flow.png",
     url: "https://flow.google.com/",
     domain: "labs.google",
@@ -137,6 +150,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "ElevenLabs",
+    tr: { ro: "Voci AI realiste pentru voiceover, reclame și videoclipuri: text în vorbire, clonarea vocii și dublaj în alte limbi.", ru: "Реалистичные ИИ-голоса для озвучки, рекламы и видео: синтез речи, клонирование голоса и дубляж на другие языки." },
     url: "https://elevenlabs.io/",
     domain: "elevenlabs.io",
     maker: "ElevenLabs",
@@ -148,6 +162,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Epidemic Sound",
+    tr: { ro: "Muzică și efecte sonore licențiate pentru videoclipuri și rețele sociale, ca să nu-ți fie conținutul blocat pentru drepturi de autor.", ru: "Лицензионная музыка и звуковые эффекты для видео и соцсетей, чтобы контент не заглушали и не удаляли из-за авторских прав." },
     url: "https://epidemicsound.com",
     domain: "epidemicsound.com",
     maker: "Epidemic Sound",
@@ -158,6 +173,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Meta Business Suite",
+    tr: { ro: "Gestionează Facebook și Instagram într-un singur loc: programează postări, răspunde la mesaje și vezi cum performează conținutul.", ru: "Управляйте Facebook и Instagram в одном месте: планируйте публикации, отвечайте на сообщения и смотрите статистику контента." },
     url: "https://creators.facebook.com/tools/meta-business-suite/",
     domain: "business.facebook.com",
     maker: "Meta",
@@ -169,6 +185,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Meta Ad Library",
+    tr: { ro: "Caută orice reclamă activă pe Facebook și Instagram. Vezi ce promovează concurenții și cum își formulează mesajele.", ru: "Ищите любую активную рекламу в Facebook и Instagram. Смотрите, что рекламируют конкуренты и как они это формулируют." },
     url: "https://www.facebook.com/ads/library/",
     domain: "facebook.com",
     maker: "Meta",
@@ -180,6 +197,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "ManyChat",
+    tr: { ro: "Automatizează mesajele pe Instagram, Messenger și WhatsApp: răspunsuri automate la comentarii, colectarea de clienți potențiali și răspunsuri la întrebări frecvente.", ru: "Автоматизируйте сообщения в Instagram, Messenger и WhatsApp: автоответы на комментарии, сбор заявок и ответы на частые вопросы." },
     logo: "/resources/logos/manychat.png",
     url: "https://get.manychat.com/",
     domain: "manychat.com",
@@ -191,6 +209,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Apify",
+    tr: { ro: "Instrumente gata făcute de extragere a datelor din Instagram, TikTok, Google Maps și altele. Adună postări, recenzii și liste de afaceri într-un tabel.", ru: "Готовые парсеры для Instagram, TikTok, Google Maps и других сайтов. Собирайте посты, отзывы и списки компаний в таблицу." },
     logo: "/resources/logos/apify.png",
     url: "https://console.apify.com/",
     domain: "apify.com",
@@ -202,6 +221,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "AnswerThePublic",
+    tr: { ro: "Vezi întrebările și expresiile pe care oamenii le caută despre un subiect. Excelent pentru idei de conținut și pagini de întrebări frecvente.", ru: "Узнайте, какие вопросы и фразы люди ищут по теме. Отлично подходит для идей контента и страниц с частыми вопросами." },
     logo: "/resources/logos/answerthepublic.png",
     url: "https://answerthepublic.com/en",
     domain: "answerthepublic.com",
@@ -213,6 +233,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Semrush",
+    tr: { ro: "Cercetare SEO și a concurenței: volume de căutare, traficul rivalilor, reclamele lor și un audit al propriului site.", ru: "SEO и анализ конкурентов: объёмы запросов, трафик соперников, их реклама и аудит вашего сайта." },
     url: "https://www.semrush.com/",
     domain: "semrush.com",
     maker: "Semrush",
@@ -224,6 +245,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Google Trends",
+    tr: { ro: "Compară cum se schimbă interesul pentru o căutare în timp și pe țări. Util pentru sezonalitate și cerere.", ru: "Сравнивайте, как меняется интерес к запросу во времени и по странам. Полезно для оценки сезонности и спроса." },
     url: "https://trends.google.com/trends/",
     domain: "trends.google.com",
     maker: "Google",
@@ -235,6 +257,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Google Analytics",
+    tr: { ro: "Analiză gratuită a site-ului: cine te vizitează, de unde vin vizitatorii și ce pagini îi transformă în clienți.", ru: "Бесплатная аналитика сайта: кто к вам заходит, откуда приходят посетители и какие страницы превращают их в клиентов." },
     url: "https://marketingplatform.google.com/about/analytics/",
     domain: "analytics.google.com",
     maker: "Google",
@@ -246,6 +269,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Value Proposition Generator",
+    tr: { ro: "Instrument AI gratuit care redactează o propunere de valoare dintr-o scurtă descriere a clientului, a problemei lui și a produsului tău.", ru: "Бесплатный ИИ-инструмент, который составляет ценностное предложение по краткому описанию клиента, его проблемы и вашего продукта." },
     url: "https://ideabuddy.com/free-ai-tools/value-proposition-generator/",
     domain: "ideabuddy.com",
     maker: "IdeaBuddy",
@@ -256,6 +280,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Trello",
+    tr: { ro: "Panouri, liste și carduri simple pentru planificarea proiectelor, a calendarului de conținut și a sarcinilor echipei.", ru: "Простые доски, списки и карточки для планирования проектов, контент-календаря и задач команды." },
     url: "https://trello.com/",
     domain: "trello.com",
     maker: "Atlassian",
@@ -267,6 +292,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Mailchimp",
+    tr: { ro: "Email marketing: construiește o listă de abonați, creează newslettere și configurează emailuri automate de bun venit și follow-up.", ru: "Email-маркетинг: собирайте базу подписчиков, делайте рассылки и настраивайте автоматические приветственные и повторные письма." },
     url: "https://mailchimp.com/",
     domain: "mailchimp.com",
     maker: "Intuit",
@@ -278,6 +304,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Zapier",
+    tr: { ro: "Conectează aplicațiile și automatizează munca repetitivă fără cod, de ex. trimite clienții noi din formulare direct într-un tabel și pe email.", ru: "Связывайте приложения и автоматизируйте рутину без кода, например отправляйте новые заявки из форм прямо в таблицу и на почту." },
     url: "https://zapier.com/",
     domain: "zapier.com",
     maker: "Zapier",
@@ -288,6 +315,20 @@ export const RESOURCES: Resource[] = [
     color: "#FF4F00",
   },
 ];
+
+export const describe = (r: Resource, lang: Lang) => (lang === "en" ? r.description : r.tr[lang]);
+
+/** Category names per language. Keys are the English names used in RESOURCES. */
+export const CATEGORY_TEXT: Record<string, { ro: string; ru: string }> = {
+  "AI assistants": { ro: "Asistenți AI", ru: "ИИ-ассистенты" },
+  "Design & content": { ro: "Design și conținut", ru: "Дизайн и контент" },
+  "Video & audio": { ro: "Video și audio", ru: "Видео и аудио" },
+  "Social media & ads": { ro: "Rețele sociale și reclame", ru: "Соцсети и реклама" },
+  "Research & SEO": { ro: "Cercetare și SEO", ru: "Исследования и SEO" },
+  "Strategy & planning": { ro: "Strategie și planificare", ru: "Стратегия и планирование" },
+  "Productivity & automation": { ro: "Productivitate și automatizare", ru: "Продуктивность и автоматизация" },
+};
+export const categoryName = (c: string, lang: Lang) => (lang === "en" ? c : (CATEGORY_TEXT[c]?.[lang] ?? c));
 
 /** Categories in first-seen order. */
 export const CATEGORIES = [...new Set(RESOURCES.map((r) => r.category))];
