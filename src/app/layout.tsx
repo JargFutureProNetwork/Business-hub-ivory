@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/hub/SiteHeader";
+import { SiteFooter } from "@/components/hub/SiteFooter";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="font-sans">
         <SiteHeader />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );
