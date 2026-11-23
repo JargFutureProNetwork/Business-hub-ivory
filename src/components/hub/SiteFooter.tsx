@@ -2,7 +2,7 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import { Globe, Mail } from "lucide-react";
 import { BRAND_ICONS } from "@/lib/brand-icons";
-import { GUIDE, ORG, SOCIAL, type SiteLink } from "@/lib/site";
+import { ORG, SOCIAL, type SiteLink } from "@/lib/site";
 
 const stroke = {
   width: 16,
@@ -73,8 +73,8 @@ function Heading({ children }: { children: ReactNode }) {
 export function SiteFooter() {
   return (
     <footer className="border-t border-line bg-surface text-[15px]">
-      <div className="max-w-[1440px] mx-auto grid sm:grid-cols-2 lg:grid-cols-4">
-        <div className="px-6 sm:px-8 py-10 border-b sm:border-r lg:border-b-0 border-line">
+      <div className="max-w-[1440px] mx-auto grid sm:grid-cols-2 lg:grid-cols-3">
+        <div className="px-6 sm:px-8 py-10 border-b lg:border-b-0 sm:border-r border-line">
           <Image src="/umbp-mark.png" alt="" width={296} height={227} className="h-9 w-auto" />
           <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] leading-relaxed text-ink">
             {ORG.name}
@@ -91,18 +91,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <nav aria-label="Guide" className="px-6 sm:px-8 py-10 border-b lg:border-b-0 lg:border-r border-line">
-          <Heading>Guide</Heading>
-          <ul className="mt-5 space-y-3">
-            {GUIDE.map((l) => (
-              <li key={l.label}>
-                <FooterLink link={l} />
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <nav aria-label="Follow" className="px-6 sm:px-8 py-10 border-b sm:border-b-0 sm:border-r border-line">
+        <nav aria-label="Follow" className="px-6 sm:px-8 py-10 border-b lg:border-b-0 lg:border-r border-line">
           <Heading>Follow</Heading>
           <ul className="mt-5 space-y-3">
             {SOCIAL.map((s) => (

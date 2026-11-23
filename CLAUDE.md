@@ -10,9 +10,9 @@ It grew out of the Canvas Lab app below, which is still the bulk of the code.
 |---|---|
 | `src/lib/tools.ts` | `TOOLS`: name, route, copy, icon and kind of every tool. The dashboard cards, header nav and footer all read it, so a new tool is added here once |
 | `src/lib/resources.ts` | `RESOURCES`: the 24 recommended tools on the Resources page (name, url, domain, maker, category, description, fallback icon/colour). Categories become the filter chips |
-| `src/components/hub/ResourceBrowser.tsx`, `LogoTile.tsx` | Resources search, category chips and cards. A logo is the site's favicon loaded by the visitor's browser from Google's favicon service; if that fails or is tiny, a local simple-icons glyph or a monogram on the brand colour |
+| `src/components/hub/ResourceBrowser.tsx`, `LogoTile.tsx` | Resources search, category chips and cards. A logo is the supplied file in `public/resources/logos/` if set, otherwise the site's favicon loaded by the visitor's browser from Google's favicon service; if that fails or is tiny, a local simple-icons glyph or a monogram on the brand colour |
 | `src/lib/brand-icons.ts` | The few simple-icons (CC0) glyphs the hub uses, generated from simple-icons 16.38.1 |
-| `src/lib/site.ts` | Footer details: address, contact, Guide and Follow links. An empty `href` renders as plain text |
+| `src/lib/site.ts` | Footer details: address, website, email, WhatsApp and social links. An empty `href` renders as plain text |
 | `src/components/hub/SiteFooter.tsx` | Site-wide footer (rendered in the root layout) |
 | `src/components/hub/SiteHeader.tsx` | Sticky header: logo, nav (collapses to a menu under `lg`), and the site-wide theme toggle |
 | `src/components/hub/ToolFrame.tsx` | Shows an embedded tool in a same-origin iframe sized to the viewport, with an "Open full screen" link |

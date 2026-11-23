@@ -4,7 +4,9 @@ import type { BrandIconKey } from "./brand-icons";
  * Tools listed on the Resources page.
  *
  * To add one, append an entry to `RESOURCES`:
- * - `domain` is used to load the site's own icon in the visitor's browser.
+ * - `logo` is a supplied logo in `public/resources/logos/` (160x160 PNG). When set,
+ *   it is used as-is.
+ * - Otherwise `domain` is used to load the site's own icon in the visitor's browser.
  * - `icon` is the offline fallback: a simple-icons glyph from `brand-icons.ts`.
  *   Without one, the fallback is a monogram tile in `color`.
  * Categories become the filter chips, in the order they first appear.
@@ -16,6 +18,7 @@ export type Resource = {
   maker: string;
   category: string;
   description: string;
+  logo?: string;
   icon?: BrandIconKey;
   color: string;
 };
@@ -23,6 +26,7 @@ export type Resource = {
 export const RESOURCES: Resource[] = [
   {
     name: "ChatGPT",
+    logo: "/resources/logos/chatgpt.png",
     url: "https://chatgpt.com/",
     domain: "chatgpt.com",
     maker: "OpenAI",
@@ -33,6 +37,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "ChatGPT Scheduled Tasks",
+    logo: "/resources/logos/chatgpt.png",
     url: "https://chatgpt.com/scheduled",
     domain: "chatgpt.com",
     maker: "OpenAI",
@@ -65,6 +70,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Canva",
+    logo: "/resources/logos/canva.png",
     url: "https://www.canva.com/",
     domain: "canva.com",
     maker: "Canva",
@@ -75,6 +81,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Gamma",
+    logo: "/resources/logos/gamma.png",
     url: "https://gamma.app/",
     domain: "gamma.app",
     maker: "Gamma",
@@ -85,6 +92,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Nano Banana",
+    logo: "/resources/logos/nano-banana.png",
     url: "https://aistudio.google.com/models/nano-banana",
     domain: "aistudio.google.com",
     maker: "Google AI Studio",
@@ -106,6 +114,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "CapCut",
+    logo: "/resources/logos/capcut.png",
     url: "https://www.capcut.com/",
     domain: "capcut.com",
     maker: "CapCut",
@@ -116,6 +125,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Google Flow",
+    logo: "/resources/logos/google-flow.png",
     url: "https://flow.google.com/",
     domain: "labs.google",
     maker: "Google Labs",
@@ -170,6 +180,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "ManyChat",
+    logo: "/resources/logos/manychat.png",
     url: "https://get.manychat.com/",
     domain: "manychat.com",
     maker: "ManyChat",
@@ -180,6 +191,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "Apify",
+    logo: "/resources/logos/apify.png",
     url: "https://console.apify.com/",
     domain: "apify.com",
     maker: "Apify",
@@ -190,6 +202,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     name: "AnswerThePublic",
+    logo: "/resources/logos/answerthepublic.png",
     url: "https://answerthepublic.com/en",
     domain: "answerthepublic.com",
     maker: "NP Digital",

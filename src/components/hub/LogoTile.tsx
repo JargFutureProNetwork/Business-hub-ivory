@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { BRAND_ICONS } from "@/lib/brand-icons";
 import type { Resource } from "@/lib/resources";
 
@@ -12,7 +13,8 @@ function isLight(hex: string) {
 }
 
 /**
- * A tool's logo. It first shows the site's own icon, fetched by the visitor's
+ * A tool's logo. A supplied logo (`resource.logo`) is shown as-is. Otherwise it
+ * shows the site's own icon, fetched by the visitor's
  * browser from Google's favicon service. If that fails, or comes back as a
  * tiny placeholder, it falls back to a local simple-icons glyph, and failing
  * that a monogram, both on the brand colour.
@@ -28,6 +30,14 @@ export function LogoTile({ resource, size = 48 }: { resource: Resource; size?: n
   }, []);
 
   const box = { width: size, height: size };
+
+  if (resource.logo) {
+    return (
+      <span className="block shrink-0 rounded-xl overflow-hidden ring-1 ring-black/5" style={box}>
+        <Image src={resource.logo} alt="" width={160} height={160} className="h-full w-full object-cover" />
+      </span>
+    );
+  }
 
   if (!failed) {
     return (
